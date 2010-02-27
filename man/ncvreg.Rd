@@ -3,11 +3,12 @@
 \title{Fit an MCP- or SCAD-penalized regression path}
 \description{Fit coefficients paths for MCP- or SCAD-penalized
   regression models over a grid of values for the regularization
-  parameter lambda.  Fits linear and logistic regression models.}
+  parameter lambda.  Fits linear and logistic regression models, with
+  option for an additional L2 penalty.}
 \usage{
 ncvreg(X, y, family=c("gaussian","binomial"), penalty=c("MCP","SCAD"),
-a=3, lambda.min=ifelse(n>p,.001,.05), n.lambda=100, eps=.001,
-max.iter=500, convex=TRUE)
+gamma=3, alpha=1, lambda.min=ifelse(n>p,.001,.05), n.lambda=100, eps=.001,
+max.iter=1000, convex=TRUE, dfmax=p+1)
 }
 \arguments{
   \item{X}{The design matrix, without an intercept.  \code{ncvreg}
@@ -17,7 +18,13 @@ max.iter=500, convex=TRUE)
     response.}
   \item{penalty}{The penalty to be applied to the model.  Either "MCP"
     (the default) or "SCAD".}
-  \item{a}{The tuning parameter of the MCP/SCAD penalty (see details).}
+  \item{gamma}{The tuning parameter of the MCP/SCAD penalty (see details).}
+  \item{alpha}{Tuning parameter for the Mnet estimator which controls
+    the relative contributions from the MCP/SCAD penalty and the ridge,
+    or L2 penalty.  \code{alpha=1} is equivalent to MCP/SCAD penalty,
+    while \code{alpha=0} would be equivalent to ridge regression.
+    However, \code{alpha=0} is not supported; \code{alpha} may be
+    arbitrarily small, but not exactly 0.}
   \item{lambda.min}{The smallest value for lambda, as a fraction of
     lambda.max.  Default is .001 if the number of observations is larger
     than the number of covariates and .05 otherwise.}
@@ -25,10 +32,13 @@ max.iter=500, convex=TRUE)
   \item{eps}{Convergence threshhold.  The algorithm iterates until the
     relative change in any coefficient is less than \code{eps}.  Default
     is \code{.001}.}
-  \item{max.iter}{Maximum number of iterations.  Default is 500.  See
-    details.}
+  \item{max.iter}{Maximum number of iterations.  Default is 1000.x}
   \item{convex}{Calculate index for which objective function ceases to
-    be locally convex?  Default is TRUE.}}
+    be locally convex?  Default is TRUE.}
+  \item{dfmax}{Upper bound for the number of nonzero coefficients.
+    Default is no upper bound.  However, for large data sets,
+    computational burden may be heavy for models with a large number of
+    nonzero coefficients.}}
 \details{
   The sequence of models indexed by the regularization parameter
   \code{lambda} is fit using a coordinate descent algorithm.  For
@@ -59,7 +69,7 @@ max.iter=500, convex=TRUE)
     path.}
   \item{penalty}{Same as above.}
   \item{family}{Same as above.}
-  \item{a}{Same as above.}
+  \item{gamma}{Same as above.}
   \item{convex.min}{The last index for which the objective function is
     locally convex.  The smallest value of lambda for which the
     objective function is convex is therefore \code{lambda[convex.min]},
@@ -76,13 +86,23 @@ y <- prostate$lpsa
 
 par(mfrow=c(2,2))
 fit <- ncvreg(X,y)
-plot(fit,main="a=3")
-fit <- ncvreg(X,y,a=10)
-plot(fit,main="a=10")
-fit <- ncvreg(X,y,a=1.5)
-plot(fit,main="a=1.5")
+plot(fit,main=expression(paste(gamma,"=",3)))
+fit <- ncvreg(X,y,gamma=10)
+plot(fit,main=expression(paste(gamma,"=",10)))
+fit <- ncvreg(X,y,gamma=1.5)
+plot(fit,main=expression(paste(gamma,"=",1.5)))
 fit <- ncvreg(X,y,penalty="SCAD")
-plot(fit,main="SCAD")
+plot(fit,main=expression(paste("SCAD, ",gamma,"=",3)))
+
+par(mfrow=c(2,2))
+fit <- ncvreg(X,y)
+plot(fit,main=expression(paste(alpha,"=",1)))
+fit <- ncvreg(X,y,alpha=0.9)
+plot(fit,main=expression(paste(alpha,"=",0.9)))
+fit <- ncvreg(X,y,alpha=0.5)
+plot(fit,main=expression(paste(alpha,"=",0.5)))
+fit <- ncvreg(X,y,alpha=0.1)
+plot(fit,main=expression(paste(alpha,"=",0.1)))
 
 ## Logistic regression
 data(heart)
@@ -91,13 +111,23 @@ y <- heart$chd
 
 par(mfrow=c(2,2))
 fit <- ncvreg(X,y,family="binomial")
-plot(fit,main="a=3")
-fit <- ncvreg(X,y,family="binomial",a=10)
-plot(fit,main="a=10")
-fit <- ncvreg(X,y,family="binomial",a=1.5)
-plot(fit,main="a=1.5")
+plot(fit,main=expression(paste(gamma,"=",3)))
+fit <- ncvreg(X,y,family="binomial",gamma=10)
+plot(fit,main=expression(paste(gamma,"=",10)))
+fit <- ncvreg(X,y,family="binomial",gamma=1.5)
+plot(fit,main=expression(paste(gamma,"=",1.5)))
 fit <- ncvreg(X,y,family="binomial",penalty="SCAD")
-plot(fit,main="SCAD")
+plot(fit,main=expression(paste("SCAD, ",gamma,"=",3)))
+
+par(mfrow=c(2,2))
+fit <- ncvreg(X,y,family="binomial")
+plot(fit,main=expression(paste(alpha,"=",1)))
+fit <- ncvreg(X,y,family="binomial",alpha=0.9)
+plot(fit,main=expression(paste(alpha,"=",0.9)))
+fit <- ncvreg(X,y,family="binomial",alpha=0.5)
+plot(fit,main=expression(paste(alpha,"=",0.5)))
+fit <- ncvreg(X,y,family="binomial",alpha=0.1)
+plot(fit,main=expression(paste(alpha,"=",0.1)))
 }
 \keyword{models}
 \keyword{regression}

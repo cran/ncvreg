@@ -25,7 +25,8 @@ static int checkConvergence(double *beta, double *beta_old, double eps, int l, i
     {
       if (beta[l*J+j]!=0 & beta_old[j]!=0)
 	{
-	  if (fabs((beta[l*J+j]-beta_old[j])/beta_old[j]) > eps)
+	  /*if (fabs((beta[l*J+j]-beta_old[j])/beta_old[j]) > eps)*/
+	  if (fabs(beta[l*J+j]-beta_old[j]) > eps)
 	    {
 	      converged = 0;
 	      break;
@@ -52,32 +53,32 @@ static double S(double z, double l)
   return(0);
 }
 
-static double MCP(double z, double l, double a, double v)
+static double MCP(double z, double l1, double l2, double gamma, double v)
 {
   double s=0;
   if (z > 0) s = 1;
   else if (z < 0) s = -1;
-  if (fabs(z) <= l) return(0);
-  if (fabs(z) <= a*l) return(s*(fabs(z)-l)/(v*(1-1/a)));
-  return(z/v);
+  if (fabs(z) <= l1) return(0);
+  else if (fabs(z) <= gamma*l1*(1+l2)) return(s*(fabs(z)-l1)/(v*(1+l2-1/gamma)));
+  else return(z/(v*(1+l2)));
 }
 
-static double SCAD(double z, double l, double a, double v)
+static double SCAD(double z, double l1, double l2, double gamma, double v)
 {
   double s=0;
   if (z > 0) s = 1;
   else if (z < 0) s = -1;
-  if (fabs(z) <= l) return(0);
-  if (fabs(z) <= 2*l) return(s*(fabs(z)-l)/v);
-  if (fabs(z) <= a*l) return(s*(fabs(z)-a*l/(a-1))/(v*(1-1/(a-1))));
-  return(z/v);
+  if (fabs(z) <= l1) return(0);
+  else if (fabs(z) <= (l1*(1+l2)+l1)) return(s*(fabs(z)-l1)/(v*(1+l2)));
+  else if (fabs(z) <= gamma*l1*(1+l2)) return(s*(fabs(z)-gamma*l1/(gamma-1))/(v*(1-1/(gamma-1)+l2)));
+  else return(z/(v*(1+l2)));
 }
 
-static void cdfit_gaussian(double *beta, int *iter, double *x, double *y, int *n_, int *p_, char **penalty_, double *lambda, int *L_, double *eps_, int *max_iter_, double *a_)
+static void cdfit_gaussian(double *beta, int *iter, double *x, double *y, int *n_, int *p_, char **penalty_, double *lambda, int *L_, double *eps_, int *max_iter_, double *gamma_, double *alpha_, int *dfmax_)
 {
   /* Declarations */
-  int L=L_[0]; int p=p_[0]; int n=n_[0]; int max_iter=max_iter_[0]; double eps=eps_[0]; double a=a_[0]; char *penalty=penalty_[0];
-  int converged;
+  int L=L_[0]; int p=p_[0]; int n=n_[0]; int max_iter=max_iter_[0]; double eps=eps_[0]; double gamma=gamma_[0]; double alpha=alpha_[0]; char *penalty=penalty_[0]; int dfmax=dfmax_[0];
+  int converged, active;
   double *r, *beta_old;
   r = vector(n); for (int i=0;i<n;i++) r[i] = y[i];
   beta_old = vector(p);
@@ -91,6 +92,20 @@ static void cdfit_gaussian(double *beta, int *iter, double *x, double *y, int *n
 	  converged = 0;
 	  iter[l] = iter[l] + 1;
 
+	  /* Check dfmax */
+	  active = 0;
+	  for (int j=0;j<p;j++) if (beta[l*p+j]!=0) active++;
+	  if (active > dfmax)
+	    {
+	      for (int ll=l;ll<L;ll++)
+		{
+		  for (int j=0;j<p;j++) beta[ll*p+j] = R_NaReal;
+		}
+	      free_vector(beta_old);
+	      free_vector(r);
+	      return;
+	    }
+
 	  /* Covariates */
 	  for (int j=0;j<p;j++)
 	    {
@@ -100,8 +115,8 @@ static void cdfit_gaussian(double *beta, int *iter, double *x, double *y, int *n
 	      z = z/n + beta_old[j];
 
 	      /* Update beta_j */
-	      if (strcmp(penalty,"MCP")==0) beta[l*p+j] = MCP(z,lambda[l],a,1);
-	      if (strcmp(penalty,"SCAD")==0) beta[l*p+j] = SCAD(z,lambda[l],a,1);
+	      if (strcmp(penalty,"MCP")==0) beta[l*p+j] = MCP(z,lambda[l]*alpha,lambda[l]*(1-alpha),gamma,1);
+	      if (strcmp(penalty,"SCAD")==0) beta[l*p+j] = SCAD(z,lambda[l]*alpha,lambda[l]*(1-alpha),gamma,1);
 
 	      /* Update r */
 	      if (beta[l*p+j] != beta_old[j]) for (int i=0;i<n;i++) r[i] = r[i] - (beta[l*p+j] - beta_old[j])*x[j*n+i];
@@ -122,11 +137,11 @@ static void cdfit_gaussian(double *beta, int *iter, double *x, double *y, int *n
   free_vector(r);
 }
 
-static void cdfit_binomial(double *beta0, double *beta, int *iter, double *x, double *y, int *n_, int *p_, char **penalty_, double *lambda, int *L_, double *eps_, int *max_iter_, double *a_)
+static void cdfit_binomial(double *beta0, double *beta, int *iter, double *x, double *y, int *n_, int *p_, char **penalty_, double *lambda, int *L_, double *eps_, int *max_iter_, double *gamma_, double *alpha_, int *dfmax_)
 {
   /* Declarations */
-  int L=L_[0];int p=p_[0];int n=n_[0];int max_iter=max_iter_[0];double eps=eps_[0];double a=a_[0];char *penalty=penalty_[0];
-  int converged;
+  int L=L_[0];int p=p_[0];int n=n_[0];int max_iter=max_iter_[0];double eps=eps_[0];double gamma=gamma_[0]; double alpha=alpha_[0];char *penalty=penalty_[0];int dfmax=dfmax_[0];
+  int converged, active;
   double beta0_old;
   double *r, *w, *beta_old;
   r = vector(n);
@@ -149,6 +164,22 @@ static void cdfit_binomial(double *beta0, double *beta, int *iter, double *x, do
 	{
 	  converged = 0;
 	  iter[l] = iter[l] + 1;
+
+	  /* Check dfmax */
+	  active = 0;
+	  for (int j=0;j<p;j++) if (beta[l*p+j]!=0) active++;
+	  if (active > dfmax)
+	    {
+	      for (int ll=l;ll<L;ll++)
+		{
+		  beta0[ll] = R_NaReal;
+		  for (int j=0;j<p;j++) beta[ll*p+j] = R_NaReal;
+		}
+	      free_vector(beta_old);
+	      free_vector(w);
+	      free_vector(r);
+	      return;
+	    }
 
 	  /* Approximate L */
 	  yp=yy=0;
@@ -211,8 +242,8 @@ static void cdfit_binomial(double *beta0, double *beta, int *iter, double *x, do
 	      v = xwx/n;
 
 	      /* Update beta_j */
-	      if (strcmp(penalty,"MCP")==0) beta[l*p+j] = MCP(z,lambda[l],a,v);
-	      if (strcmp(penalty,"SCAD")==0) beta[l*p+j] = SCAD(z,lambda[l],a,v);
+	      if (strcmp(penalty,"MCP")==0) beta[l*p+j] = MCP(z,lambda[l]*alpha,lambda[l]*(1-alpha),gamma,v);
+	      if (strcmp(penalty,"SCAD")==0) beta[l*p+j] = SCAD(z,lambda[l]*alpha,lambda[l]*(1-alpha),gamma,v);
 
 	      /* Update r */
 	      if (beta[l*p+j] != beta_old[j]) for (int i=0;i<n;i++) r[i] = r[i] - (beta[l*p+j] - beta_old[j])*x[j*n+i];
@@ -235,8 +266,8 @@ static void cdfit_binomial(double *beta0, double *beta, int *iter, double *x, do
 }
 
 static const R_CMethodDef cMethods[] = {
-  {"cdfit_gaussian", (DL_FUNC) &cdfit_gaussian, 12},
-  {"cdfit_binomial", (DL_FUNC) &cdfit_binomial, 13},
+  {"cdfit_gaussian", (DL_FUNC) &cdfit_gaussian, 14},
+  {"cdfit_binomial", (DL_FUNC) &cdfit_binomial, 15},
   NULL
 };
 
