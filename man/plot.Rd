@@ -8,9 +8,8 @@
 }
 \arguments{
   \item{x}{Fitted \code{"ncvreg"} model.}
-  \item{col}{Color of coefficient lines.  User can specify either a
-    single color or a vector of colors, one for each coefficient.
-    Defaults to an evenly spaced rainbow of colors.}
+  \item{col}{Color of coefficient lines.  Recycled if
+    necessary. Defaults to an evenly spaced rainbow of colors.}
   \item{alpha}{Controls alpha-blending.  Default is alpha=1.}
   \item{xlab}{Horizontal axis label.}
   \item{ylab}{Vertical axis label.}
@@ -31,7 +30,7 @@ y <- prostate$lpsa
 
 fit <- ncvreg(X,y)
 plot(fit)
-plot(fit,color="black")
+plot(fit,col="black")
 plot(fit,log=TRUE)
 }
 \keyword{models}

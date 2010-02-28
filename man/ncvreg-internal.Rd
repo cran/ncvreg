@@ -4,8 +4,8 @@
 \alias{convexMin}
 \description{Internal ncvreg functions}
 \usage{
-convexMin(beta,X,penalty,a,family)
-setupLambda(X,y,family,penalty,a,gamma,lambda.min,n.lambda)
+convexMin(beta,X,penalty,gamma,l2,family)
+setupLambda(X,y,family,penalty,alpha,lambda.min,n.lambda)
 }
 \author{Patrick Breheny <patrick.breheny@uky.edu>}
 \details{These are not intended for use by users. \code{convexMin}

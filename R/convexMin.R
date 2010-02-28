@@ -1,24 +1,27 @@
-convexMin <- function(beta,X,penalty,a,family)
+convexMin <- function(beta,X,penalty,gamma,l2,family)
   {
     n <- nrow(X)
     p <- ncol(X)
     l <- ncol(beta)
     
-    if (penalty=="MCP") p.. <- 1/a
-    else if (penalty=="SCAD") p.. <- 1/(a-1)
+    if (penalty=="MCP") k <- 1/gamma
+    else if (penalty=="SCAD") k <- 1/(gamma-1)
 
     val <- NULL
-    for (i in 2:(l-1))
+    for (i in 1:(l-1))
       {
         if (is.na(beta[1,i+1])) break
         A1 <- beta[-1,i]==0
         A2 <- beta[-1,i+1]==0
-        if (all(A1==A2)) next
         U <- A1&A2
         Xu <- X[,!U]
         if (family=="gaussian")
           {
-            cmin.i <- min(eigen(crossprod(Xu)/n-diag(rep(p..,sum(!U))))$values)
+            if (any(A1!=A2))
+              {
+                cmin <- min(eigen(crossprod(Xu)/n)$values)
+              }
+            eigen.min <- cmin - k + l2[i+1]
           }
         if (family=="binomial")
           {
@@ -29,9 +32,9 @@ convexMin <- function(beta,X,penalty,a,family)
             w[eta < log(.0001/.9999)] <- .0001
             Xu <- sqrt(w) * cbind(1,Xu)
             xwxn <- crossprod(Xu)/n
-            cmin.i <- min(eigen(xwxn-diag(c(0,diag(xwxn)[-1]*p..)))$values)
+            eigen.min <- min(eigen(xwxn-diag(c(0,diag(xwxn)[-1]*(k-l2[i+1]))))$values)
           }
-        if (cmin.i < 0)
+        if (eigen.min < 0)
           {
             val <- i
             break
