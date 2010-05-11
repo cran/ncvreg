@@ -1,4 +1,4 @@
-ncvreg <- function(X, y, family=c("gaussian","binomial"), penalty=c("MCP","SCAD"), gamma=3, alpha=1, lambda.min=ifelse(n>p,.001,.05), n.lambda=100, eps=.001, max.iter=1000, convex=TRUE, dfmax=p+1)
+ncvreg <- function(X, y, family=c("gaussian","binomial"), penalty=c("MCP","SCAD"), gamma=3, alpha=1, lambda.min=ifelse(n>p,.001,.05), n.lambda=100, lambda, eps=.001, max.iter=1000, convex=TRUE, dfmax=p+1)
   {
     ## Error checking
     family <- match.arg(family)
@@ -17,18 +17,27 @@ ncvreg <- function(X, y, family=c("gaussian","binomial"), penalty=c("MCP","SCAD"
     XX <- scale(X,meanx,normx)
     if (family=="gaussian") yy <- y - mean(y)
     else yy <- y
-    lambda <- setupLambda(XX,yy,family,penalty,alpha,lambda.min,n.lambda)
+    if (missing(lambda))
+      {
+        lambda <- setupLambda(XX,yy,family,alpha,lambda.min,n.lambda)
+        user.lambda <- FALSE
+      }
+    else
+      {
+        n.lambda <- length(lambda)
+        user.lambda <- TRUE
+      }
 
     ## Fit
     if (family=="gaussian")
       {
-        fit <- .C("cdfit_gaussian",double(p*n.lambda),integer(n.lambda),as.double(XX),as.double(yy),as.integer(n),as.integer(p),penalty,as.double(lambda),as.integer(n.lambda),as.double(eps),as.integer(max.iter),as.double(gamma),as.double(alpha),as.integer(dfmax))
+        fit <- .C("cdfit_gaussian",double(p*n.lambda),integer(n.lambda),as.double(XX),as.double(yy),as.integer(n),as.integer(p),penalty,as.double(lambda),as.integer(n.lambda),as.double(eps),as.integer(max.iter),as.double(gamma),as.double(alpha),as.integer(dfmax),as.integer(user.lambda))
         beta <- rbind(0,matrix(fit[[1]],nrow=p))
         iter <- fit[[2]]
       }
     if (family=="binomial")
       {
-        fit <- .C("cdfit_binomial",double(n.lambda),double(p*n.lambda),integer(n.lambda),as.double(XX),as.double(yy),as.integer(n),as.integer(p),penalty,as.double(lambda),as.integer(n.lambda),as.double(eps),as.integer(max.iter),as.double(gamma),as.double(alpha),as.integer(dfmax))
+        fit <- .C("cdfit_binomial",double(n.lambda),double(p*n.lambda),integer(n.lambda),as.double(XX),as.double(yy),as.integer(n),as.integer(p),penalty,as.double(lambda),as.integer(n.lambda),as.double(eps),as.integer(max.iter),as.double(gamma),as.double(alpha),as.integer(dfmax),as.integer(user.lambda))
         beta <- rbind(fit[[1]],matrix(fit[[2]],nrow=p))
         iter <- fit[[3]]
       }

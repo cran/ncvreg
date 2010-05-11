@@ -7,8 +7,8 @@
   option for an additional L2 penalty.}
 \usage{
 ncvreg(X, y, family=c("gaussian","binomial"), penalty=c("MCP","SCAD"),
-gamma=3, alpha=1, lambda.min=ifelse(n>p,.001,.05), n.lambda=100, eps=.001,
-max.iter=1000, convex=TRUE, dfmax=p+1)
+gamma=3, alpha=1, lambda.min=ifelse(n>p,.001,.05), n.lambda=100, lambda,
+eps=.001, max.iter=1000, convex=TRUE, dfmax=p+1)
 }
 \arguments{
   \item{X}{The design matrix, without an intercept.  \code{ncvreg}
@@ -29,6 +29,9 @@ max.iter=1000, convex=TRUE, dfmax=p+1)
     lambda.max.  Default is .001 if the number of observations is larger
     than the number of covariates and .05 otherwise.}
   \item{n.lambda}{The number of lambda values.  Default is 100.}
+  \item{lambda}{A user-specified sequence of lambda values.  By default,
+    a sequence of values of length \code{n.lambda} is computed, equally
+    spaced on the log scale.}
   \item{eps}{Convergence threshhold.  The algorithm iterates until the
     relative change in any coefficient is less than \code{eps}.  Default
     is \code{.001}.}
@@ -75,9 +78,10 @@ max.iter=1000, convex=TRUE, dfmax=p+1)
     objective function is convex is therefore \code{lambda[convex.min]},
     with corresponding coefficients \code{beta[,convex.min]}.}}
 \references{Breheny, P. and Huang, J. (2009)  Coordinate descent
-  algorithms for nonconvex penalized regression methods.  Available at \url{http://web.as.uky.edu/statistics/techreports/tr403/tr403.pdf}.}
+  algorithms for nonconvex penalized regression methods.  University of
+  Kentucky Technical Report \#403, available at \url{http://web.as.uky.edu/statistics/users/pbreheny/ncvreg.pdf}.}
 \author{Patrick Breheny <patrick.breheny@uky.edu>}
-\seealso{\code{plot.ncvreg}}
+\seealso{\code{plot.ncvreg}, \code{cv.ncvreg}}
 \examples{
 ## Linear regression
 data(prostate)

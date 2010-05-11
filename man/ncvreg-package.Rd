@@ -9,15 +9,16 @@
   \tabular{ll}{
     Package: \tab ncvreg\cr
     Type: \tab Package\cr
-    Version: \tab 2.0\cr
-    Date: \tab 2010-02-27\cr
+    Version: \tab 2.1\cr
+    Date: \tab 2010-05-11\cr
     License: \tab GPL-2\cr}
   Accepts a design matrix \code{X} and vector of responses \code{y},
   produces the regularization path over a grid of values for the tuning
   parameter \code{lambda}.  Also provides methods for plotting and for
   determining locally convex regions of the coefficients paths.}
 \references{Breheny, P. and Huang, J. (2009)  Coordinate descent
-  algorithms for nonconvex penalized regression methods.  Available at \url{http://web.as.uky.edu/statistics/techreports/tr403/tr403.pdf}.}
+  algorithms for nonconvex penalized regression methods.  University of
+  Kentucky Technical Report \#403, available at \url{http://web.as.uky.edu/statistics/users/pbreheny/ncvreg.pdf}.}
 \author{Patrick Breheny <patrick.breheny@uky.edu>}
 \keyword{models}
 \keyword{regression}

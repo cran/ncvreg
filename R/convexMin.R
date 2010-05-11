@@ -11,9 +11,11 @@ convexMin <- function(beta,X,penalty,gamma,l2,family)
     for (i in 1:(l-1))
       {
         if (is.na(beta[1,i+1])) break
-        A1 <- beta[-1,i]==0
+        if (i==1) A1 <- rep(1,p)
+        else A1 <- beta[-1,i]==0
         A2 <- beta[-1,i+1]==0
         U <- A1&A2
+        if (sum(!U)==0) next
         Xu <- X[,!U]
         if (family=="gaussian")
           {
