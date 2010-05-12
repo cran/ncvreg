@@ -25,8 +25,7 @@ static int checkConvergence(double *beta, double *beta_old, double eps, int l, i
     {
       if (beta[l*J+j]!=0 & beta_old[j]!=0)
 	{
-	  /*if (fabs((beta[l*J+j]-beta_old[j])/beta_old[j]) > eps)*/
-	  if (fabs(beta[l*J+j]-beta_old[j]) > eps)
+	  if (fabs((beta[l*J+j]-beta_old[j])/beta_old[j]) > eps)
 	    {
 	      converged = 0;
 	      break;
@@ -74,19 +73,21 @@ static double SCAD(double z, double l1, double l2, double gamma, double v)
   else return(z/(v*(1+l2)));
 }
 
-static void cdfit_gaussian(double *beta, int *iter, double *x, double *y, int *n_, int *p_, char **penalty_, double *lambda, int *L_, double *eps_, int *max_iter_, double *gamma_, double *alpha_, int *dfmax_)
+static void cdfit_gaussian(double *beta, int *iter, double *x, double *y, int *n_, int *p_, char **penalty_, double *lambda, int *L_, double *eps_, int *max_iter_, double *gamma_, double *alpha_, int *dfmax_, int *user_)
 {
   /* Declarations */
-  int L=L_[0]; int p=p_[0]; int n=n_[0]; int max_iter=max_iter_[0]; double eps=eps_[0]; double gamma=gamma_[0]; double alpha=alpha_[0]; char *penalty=penalty_[0]; int dfmax=dfmax_[0];
-  int converged, active;
+  int L=L_[0]; int p=p_[0]; int n=n_[0]; int max_iter=max_iter_[0]; double eps=eps_[0]; double gamma=gamma_[0]; double alpha=alpha_[0]; char *penalty=penalty_[0]; int dfmax=dfmax_[0]; int user=user_[0];
+  int converged, active, lstart;
   double *r, *beta_old;
   r = vector(n); for (int i=0;i<n;i++) r[i] = y[i];
   beta_old = vector(p);
+  if (user) lstart = 0;
+  else lstart = 1;
 
   /* Path */
-  for (int l=1;l<L;l++)
+  for (int l=lstart;l<L;l++)
     {
-      for (int j=0;j<p;j++) beta_old[j] = beta[(l-1)*p+j];
+      if (l != 0) for (int j=0;j<p;j++) beta_old[j] = beta[(l-1)*p+j];
       while (iter[l] < max_iter)
 	{
 	  converged = 0;
@@ -137,29 +138,36 @@ static void cdfit_gaussian(double *beta, int *iter, double *x, double *y, int *n
   free_vector(r);
 }
 
-static void cdfit_binomial(double *beta0, double *beta, int *iter, double *x, double *y, int *n_, int *p_, char **penalty_, double *lambda, int *L_, double *eps_, int *max_iter_, double *gamma_, double *alpha_, int *dfmax_)
+static void cdfit_binomial(double *beta0, double *beta, int *iter, double *x, double *y, int *n_, int *p_, char **penalty_, double *lambda, int *L_, double *eps_, int *max_iter_, double *gamma_, double *alpha_, int *dfmax_, int *user_)
 {
   /* Declarations */
-  int L=L_[0];int p=p_[0];int n=n_[0];int max_iter=max_iter_[0];double eps=eps_[0];double gamma=gamma_[0]; double alpha=alpha_[0];char *penalty=penalty_[0];int dfmax=dfmax_[0];
-  int converged, active;
+  int L=L_[0];int p=p_[0];int n=n_[0];int max_iter=max_iter_[0];double eps=eps_[0];double gamma=gamma_[0]; double alpha=alpha_[0];char *penalty=penalty_[0];int dfmax=dfmax_[0]; int user=user_[0];
+  int converged, active, lstart;
   double beta0_old;
   double *r, *w, *beta_old;
   r = vector(n);
   w = vector(n);
   beta_old = vector(p);
+  if (user) lstart = 0;
+  else lstart = 1;
 
   /* Initialization */
   double ybar=0;
   for (int i=0;i<n;i++) ybar = ybar + y[i];
   ybar = ybar/n;
-  beta0[0] = log(ybar/(1-ybar));
+  if (lstart==0) beta0_old = log(ybar/(1-ybar));
+  else beta0[0] = log(ybar/(1-ybar));
 
   /* Path */
   double xwr,xwx,eta,pi,yp,yy,z,v;
-  for (int l=1;l<L;l++)
+  for (int l=lstart;l<L;l++)
     {
-      beta0_old = beta0[l-1];
-      for (int j=0;j<p;j++) beta_old[j] = beta[(l-1)*p+j];
+      if (l != 0)
+	{
+	  beta0_old = beta0[l-1];
+	  for (int j=0;j<p;j++) beta_old[j] = beta[(l-1)*p+j];
+	}
+
       while (iter[l] < max_iter)
 	{
 	  converged = 0;
@@ -266,8 +274,8 @@ static void cdfit_binomial(double *beta0, double *beta, int *iter, double *x, do
 }
 
 static const R_CMethodDef cMethods[] = {
-  {"cdfit_gaussian", (DL_FUNC) &cdfit_gaussian, 14},
-  {"cdfit_binomial", (DL_FUNC) &cdfit_binomial, 15},
+  {"cdfit_gaussian", (DL_FUNC) &cdfit_gaussian, 15},
+  {"cdfit_binomial", (DL_FUNC) &cdfit_binomial, 16},
   NULL
 };
 

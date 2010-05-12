@@ -21,9 +21,10 @@ plot.ncvreg <- function(x, col, alpha=1, xlab, ylab=expression(hat(beta)), log.l
         l2 <- min(l)
         polygon(x=c(l1,l2,l2,l1),y=c(ylim[1],ylim[1],ylim[2],ylim[2]),col="gray85",border=FALSE) 
       }
+    n.col <- length(col)
     for (i in 1:p)
       {
-        lines(l,beta[i,],col=col[i])
+        lines(l,beta[i,],col=col[(i-1)%%n.col+1])
       }
     abline(h=0)
   }

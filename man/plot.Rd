@@ -20,7 +20,8 @@
   \item{\dots}{Other graphical parameters to \code{plot}}
 }
 \references{Breheny, P. and Huang, J. (2009)  Coordinate descent
-  algorithms for nonconvex penalized regression methods.  Available at \url{http://web.as.uky.edu/statistics/techreports/tr403/tr403.pdf}.}
+  algorithms for nonconvex penalized regression methods.  University of
+  Kentucky Technical Report \#403, available at \url{http://web.as.uky.edu/statistics/users/pbreheny/ncvreg.pdf}.}
 \author{Patrick Breheny <patrick.breheny@uky.edu>}
 \seealso{\code{ncvreg}}
 \examples{
