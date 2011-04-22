@@ -1,62 +1,63 @@
-ncvreg <- function(X, y, family=c("gaussian","binomial"), penalty=c("MCP","SCAD"), gamma=3, alpha=1, lambda.min=ifelse(n>p,.001,.05), n.lambda=100, lambda, eps=.001, max.iter=1000, convex=TRUE, dfmax=p+1)
+ncvreg <- function(X, y, family=c("gaussian","binomial"), penalty=c("MCP","SCAD"), gamma=3, alpha=1, lambda.min=ifelse(n>p,.001,.05), nlambda=100, lambda, eps=.001, max.iter=1000, convex=TRUE, dfmax=p+1, warn=TRUE)
   {
     ## Error checking
     family <- match.arg(family)
     penalty <- match.arg(penalty)
     if (gamma <= 1 & penalty=="MCP") stop("gamma must be greater than 1 for the MC penalty")
     if (gamma <= 2 & penalty=="SCAD") stop("gamma must be greater than 2 for the SCAD penalty")
-    if (n.lambda < 2) stop("n.lambda must be at least 2")
+    if (nlambda < 2) stop("nlambda must be at least 2")
     if (alpha <= 0) stop("alpha must be greater than 0; choose a small positive number instead")
 
     ## Set up XX, yy, lambda
     n <- length(y)
-    p <- ncol(X)
     meanx <- apply(X,2,mean)
     normx <- sqrt(apply((t(X)-meanx)^2,1,sum)/n)
-    if (any(normx < 0.0001)) stop("X contains columns which are numerically constant, please remove them; an intercept is included automatically")
-    XX <- scale(X,meanx,normx)
+    nz <- which(normx > .0001)
+    XX <- scale(X[,nz],meanx[nz],normx[nz])
+    p <- ncol(XX)
     if (family=="gaussian") yy <- y - mean(y)
     else yy <- y
     if (missing(lambda))
       {
-        lambda <- setupLambda(XX,yy,family,alpha,lambda.min,n.lambda)
+        lambda <- setupLambda(XX,yy,family,alpha,lambda.min,nlambda)
         user.lambda <- FALSE
       }
     else
       {
-        n.lambda <- length(lambda)
+        nlambda <- length(lambda)
         user.lambda <- TRUE
       }
 
     ## Fit
     if (family=="gaussian")
       {
-        fit <- .C("cdfit_gaussian",double(p*n.lambda),integer(n.lambda),as.double(XX),as.double(yy),as.integer(n),as.integer(p),penalty,as.double(lambda),as.integer(n.lambda),as.double(eps),as.integer(max.iter),as.double(gamma),as.double(alpha),as.integer(dfmax),as.integer(user.lambda))
-        beta <- rbind(0,matrix(fit[[1]],nrow=p))
+        fit <- .C("cdfit_gaussian",double(p*nlambda),integer(nlambda),as.double(XX),as.double(yy),as.integer(n),as.integer(p),penalty,as.double(lambda),as.integer(nlambda),as.double(eps),as.integer(max.iter),as.double(gamma),as.double(alpha),as.integer(dfmax),as.integer(user.lambda))
+        b <- rbind(0,matrix(fit[[1]],nrow=p))
         iter <- fit[[2]]
       }
     if (family=="binomial")
       {
-        fit <- .C("cdfit_binomial",double(n.lambda),double(p*n.lambda),integer(n.lambda),as.double(XX),as.double(yy),as.integer(n),as.integer(p),penalty,as.double(lambda),as.integer(n.lambda),as.double(eps),as.integer(max.iter),as.double(gamma),as.double(alpha),as.integer(dfmax),as.integer(user.lambda))
-        beta <- rbind(fit[[1]],matrix(fit[[2]],nrow=p))
+        fit <- .C("cdfit_binomial",double(nlambda),double(p*nlambda),integer(nlambda),as.double(XX),as.double(yy),as.integer(n),as.integer(p),penalty,as.double(lambda),as.integer(nlambda),as.double(eps),as.integer(max.iter),as.double(gamma),as.double(alpha),as.integer(dfmax),as.integer(user.lambda),as.integer(warn))
+        b <- rbind(fit[[1]],matrix(fit[[2]],nrow=p))
         iter <- fit[[3]]
       }
     
     ## Eliminate saturated lambda values, if any
-    ind <- !is.na(beta[p,])
-    beta <- beta[,ind]
+    ind <- !is.na(b[p,])
+    b <- b[,ind]
     iter <- iter[ind]
     lambda <- lambda[ind]
-    
-    if (any(iter==max.iter)) warning("Algorithm failed to converge for all values of lambda")
 
-    if (convex) convex.min <- convexMin(beta,XX,penalty,gamma,lambda*(1-alpha),family)
+    if (warn & any(iter==max.iter)) warning("Algorithm failed to converge for all values of lambda")
+
+    if (convex) convex.min <- convexMin(b,XX,penalty,gamma,lambda*(1-alpha),family)
     else convex.min <- NULL
 
     ## Unstandardize
-    beta[-1,] <- beta[-1,]/normx
+    beta <- matrix(0,nrow=(ncol(X)+1),ncol=length(lambda))
+    beta[nz+1,] <- b[-1,]/normx[nz]
     if (family=="gaussian") beta[1,] <- mean(y) - crossprod(meanx,beta[-1,,drop=FALSE])
-    if (family=="binomial") beta[1,] <- beta[1,] - crossprod(meanx,beta[-1,,drop=FALSE])
+    if (family=="binomial") beta[1,] <- b[1,] - crossprod(meanx,beta[-1,,drop=FALSE])
 
     ## Names
     if (is.null(colnames(X))) varnames <- paste("V",1:ncol(X),sep="")

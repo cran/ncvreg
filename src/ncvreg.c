@@ -138,10 +138,10 @@ static void cdfit_gaussian(double *beta, int *iter, double *x, double *y, int *n
   free_vector(r);
 }
 
-static void cdfit_binomial(double *beta0, double *beta, int *iter, double *x, double *y, int *n_, int *p_, char **penalty_, double *lambda, int *L_, double *eps_, int *max_iter_, double *gamma_, double *alpha_, int *dfmax_, int *user_)
+static void cdfit_binomial(double *beta0, double *beta, int *iter, double *x, double *y, int *n_, int *p_, char **penalty_, double *lambda, int *L_, double *eps_, int *max_iter_, double *gamma_, double *alpha_, int *dfmax_, int *user_, int *warn_)
 {
   /* Declarations */
-  int L=L_[0];int p=p_[0];int n=n_[0];int max_iter=max_iter_[0];double eps=eps_[0];double gamma=gamma_[0]; double alpha=alpha_[0];char *penalty=penalty_[0];int dfmax=dfmax_[0]; int user=user_[0];
+  int L=L_[0];int p=p_[0];int n=n_[0];int max_iter=max_iter_[0];double eps=eps_[0];double gamma=gamma_[0]; double alpha=alpha_[0];char *penalty=penalty_[0];int dfmax=dfmax_[0]; int user=user_[0]; int warn=warn_[0];
   int converged, active, lstart;
   double beta0_old;
   double *r, *w, *beta_old;
@@ -162,6 +162,7 @@ static void cdfit_binomial(double *beta0, double *beta, int *iter, double *x, do
   double xwr,xwx,eta,pi,yp,yy,z,v;
   for (int l=lstart;l<L;l++)
     {
+      /*Rprintf("l=%d\n",l);*/
       if (l != 0)
 	{
 	  beta0_old = beta0[l-1];
@@ -213,7 +214,7 @@ static void cdfit_binomial(double *beta0, double *beta, int *iter, double *x, do
 	    }
 	  if (yp/yy < .01)
 	    {
-	      warning("Model saturated; exiting...");
+	      if (warn) warning("Model saturated; exiting...");
 	      for (int ll=l;ll<L;ll++)
 		{
 		  beta0[ll] = R_NaReal;
@@ -275,7 +276,7 @@ static void cdfit_binomial(double *beta0, double *beta, int *iter, double *x, do
 
 static const R_CMethodDef cMethods[] = {
   {"cdfit_gaussian", (DL_FUNC) &cdfit_gaussian, 15},
-  {"cdfit_binomial", (DL_FUNC) &cdfit_binomial, 16},
+  {"cdfit_binomial", (DL_FUNC) &cdfit_binomial, 17},
   NULL
 };
 

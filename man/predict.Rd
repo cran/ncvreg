@@ -22,9 +22,9 @@ a fitted \code{"ncvreg"} object.
     probability; \code{"coefficients"} returns the coefficients.}
   \item{\dots}{Not used.}}
 \value{The object returned depends on type.}
-\references{Breheny, P. and Huang, J. (2009)  Coordinate descent
-  algorithms for nonconvex penalized regression methods.  University of
-  Kentucky Technical Report \#403, available at \url{http://web.as.uky.edu/statistics/users/pbreheny/ncvreg.pdf}.}
+\references{Breheny, P. and Huang, J. (2011) Coordinate descent
+  algorithms for nonconvex penalized regression, with applications to
+  biological feature selection. Ann. Appl. Statist., 5: 232-253.}
 \author{Patrick Breheny <patrick.breheny@uky.edu>}
 \seealso{\code{ncvreg}}
 \examples{
