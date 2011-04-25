@@ -1,8 +1,27 @@
-setupLambda <- function(X,y,family,alpha,lambda.min,n.lambda)
+setupXYL <- function(X,y,family,alpha,lambda.min,n.lambda)
   {
-    n <- nrow(X)
-    p <- ncol(X)
+    n <- length(y)
+    meanx <- apply(X,2,mean)
+    normx <- sqrt(apply((t(X)-meanx)^2,1,sum)/n)
+    nz <- which(normx > .0001)
+    XX <- scale(X[,nz],meanx[nz],normx[nz])
+    p <- ncol(XX)
 
+    if (family=="gaussian") yy <- y - mean(y)
+    else yy <- y
+    
+    if (missing(lambda))
+      {
+        lambda <- setupLambda(XX,yy,family,alpha,lambda.min,n.lambda)
+        user.lambda <- FALSE
+      }
+    else
+      {
+        n.lambda <- length(lambda)
+        user.lambda <- TRUE
+      }
+
+    
     ## Determine lambda.max
     if (family=="gaussian")
       {

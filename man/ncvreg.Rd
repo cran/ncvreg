@@ -7,8 +7,8 @@
   option for an additional L2 penalty.}
 \usage{
 ncvreg(X, y, family=c("gaussian","binomial"), penalty=c("MCP","SCAD"),
-gamma=3, alpha=1, lambda.min=ifelse(n>p,.001,.05), n.lambda=100, lambda,
-eps=.001, max.iter=1000, convex=TRUE, dfmax=p+1)
+gamma=3, alpha=1, lambda.min=ifelse(n>p,.001,.05), nlambda=100, lambda,
+eps=.001, max.iter=1000, convex=TRUE, dfmax=p+1, warn=TRUE)
 }
 \arguments{
   \item{X}{The design matrix, without an intercept.  \code{ncvreg}
@@ -28,9 +28,9 @@ eps=.001, max.iter=1000, convex=TRUE, dfmax=p+1)
   \item{lambda.min}{The smallest value for lambda, as a fraction of
     lambda.max.  Default is .001 if the number of observations is larger
     than the number of covariates and .05 otherwise.}
-  \item{n.lambda}{The number of lambda values.  Default is 100.}
+  \item{nlambda}{The number of lambda values.  Default is 100.}
   \item{lambda}{A user-specified sequence of lambda values.  By default,
-    a sequence of values of length \code{n.lambda} is computed, equally
+    a sequence of values of length \code{nlambda} is computed, equally
     spaced on the log scale.}
   \item{eps}{Convergence threshhold.  The algorithm iterates until the
     relative change in any coefficient is less than \code{eps}.  Default
@@ -41,16 +41,18 @@ eps=.001, max.iter=1000, convex=TRUE, dfmax=p+1)
   \item{dfmax}{Upper bound for the number of nonzero coefficients.
     Default is no upper bound.  However, for large data sets,
     computational burden may be heavy for models with a large number of
-    nonzero coefficients.}}
+    nonzero coefficients.}
+  \item{warn}{Return warning messages for failures to converge and model
+    saturation?  Default is TRUE.}}
 \details{
   The sequence of models indexed by the regularization parameter
   \code{lambda} is fit using a coordinate descent algorithm.  For
   logistic regression models, some care is taken to avoid model
   saturation; the algorithm may exit early in this setting.  The
   objective function is defined to be
-  \deqn{1/(2*n)RSS + penalty}
+  \deqn{1/(2*n)RSS + penalty}{\frac{1}{2n}\textrm{RSS} + \text{penalty}}
   for \code{"gaussian"} and
-  \deqn{-(1/n) loglik + penalty}
+  \deqn{-(1/n) loglik + penalty}{-\frac{1}{n}\ell + \text{penalty}}
   for \code{"binomial"}, where the likelihood is from a traditional
   generalized linear model for the log-odds of an event.\cr
   \cr
@@ -59,14 +61,14 @@ eps=.001, max.iter=1000, convex=TRUE, dfmax=p+1)
   rescaling (see reference) is used.\cr
   \cr
   The convexity diagnostics rely on a fine covering of
-  (lambda.min,lambda.max); choosing a low value of \code{n.lambda} may
+  (lambda.min,lambda.max); choosing a low value of \code{nlambda} may
   produce unreliable results.}
 \value{
   An object with S3 class \code{"ncvreg"} containing:
   \item{beta}{The fitted matrix of coefficients.  The number of rows is
     equal to the number of coefficients, and the number of columns is
-    equal to \code{n.lambda}.}
-  \item{iter}{A vector of length \code{n.lambda} containing the number
+    equal to \code{nlambda}.}
+  \item{iter}{A vector of length \code{nlambda} containing the number
     of iterations until convergence at each value of \code{lambda}.}
   \item{lambda}{The sequence of regularization parameter values in the
     path.}
@@ -77,9 +79,9 @@ eps=.001, max.iter=1000, convex=TRUE, dfmax=p+1)
     locally convex.  The smallest value of lambda for which the
     objective function is convex is therefore \code{lambda[convex.min]},
     with corresponding coefficients \code{beta[,convex.min]}.}}
-\references{Breheny, P. and Huang, J. (2009)  Coordinate descent
-  algorithms for nonconvex penalized regression methods.  University of
-  Kentucky Technical Report \#403, available at \url{http://web.as.uky.edu/statistics/users/pbreheny/ncvreg.pdf}.}
+\references{Breheny, P. and Huang, J. (2011) Coordinate descent
+  algorithms for nonconvex penalized regression, with applications to
+  biological feature selection. Ann. Appl. Statist., 5: 232-253.}
 \author{Patrick Breheny <patrick.breheny@uky.edu>}
 \seealso{\code{plot.ncvreg}, \code{cv.ncvreg}}
 \examples{

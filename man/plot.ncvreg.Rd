@@ -4,24 +4,22 @@
 \description{Produces a plot of the coefficient paths for a fitted
   \code{"ncvreg"} object.}
 \usage{
-\method{plot}{ncvreg}(x, col, alpha=1, xlab, ylab=expression(hat(beta)), log.l=FALSE, shade=TRUE, ylim, ...)
+\method{plot}{ncvreg}(x, col, alpha=1, log.l=FALSE, shade=TRUE, ...)
 }
 \arguments{
   \item{x}{Fitted \code{"ncvreg"} model.}
   \item{col}{Color of coefficient lines.  Recycled if
     necessary. Defaults to an evenly spaced rainbow of colors.}
-  \item{alpha}{Controls alpha-blending.  Default is alpha=1.}
-  \item{xlab}{Horizontal axis label.}
-  \item{ylab}{Vertical axis label.}
+  \item{alpha}{Controls alpha-blending, helpful when the number of
+    covariates is large.  Default is alpha=1.}
   \item{log.l}{Should horizontal axis be on the log scale?  Default is
     FALSE.} 
   \item{shade}{Should nonconvex region be shaded?  Default is TRUE.}
-  \item{ylim}{Vertical axis limits.}
   \item{\dots}{Other graphical parameters to \code{plot}}
 }
-\references{Breheny, P. and Huang, J. (2009)  Coordinate descent
-  algorithms for nonconvex penalized regression methods.  University of
-  Kentucky Technical Report \#403, available at \url{http://web.as.uky.edu/statistics/users/pbreheny/ncvreg.pdf}.}
+\references{Breheny, P. and Huang, J. (2011) Coordinate descent
+  algorithms for nonconvex penalized regression, with applications to
+  biological feature selection. Ann. Appl. Statist., 5: 232-253.}
 \author{Patrick Breheny <patrick.breheny@uky.edu>}
 \seealso{\code{ncvreg}}
 \examples{
