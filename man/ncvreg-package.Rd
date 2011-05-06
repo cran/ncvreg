@@ -9,8 +9,8 @@
   \tabular{ll}{
     Package: \tab ncvreg\cr
     Type: \tab Package\cr
-    Version: \tab 2.1\cr
-    Date: \tab 2010-05-11\cr
+    Version: \tab 2.3\cr
+    Date: \tab 2011-05-06\cr
     License: \tab GPL-2\cr}
   Accepts a design matrix \code{X} and vector of responses \code{y},
   produces the regularization path over a grid of values for the tuning

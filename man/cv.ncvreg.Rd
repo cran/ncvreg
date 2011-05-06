@@ -36,18 +36,20 @@ trace=FALSE, ...)
     FALSE.}
   \item{...}{Additional arguments to \code{ncvreg}.}}
 \details{
-  The function calls \code{ncvreg} \code{nfolds} + 1 times; once with
-  all of the data, and once leaving each fold out.  The cross-validation
+  The function calls \code{ncvreg} \code{nfolds} times, each time
+  leaving out 1/\code{nfolds} of the data.  The cross-validation
   error is based on the loss function used to fit the model; see
   \code{ncvreg} for details.}
 \value{
-  An object with S3 class \code{"ncvreg"}.  In addition to the
+  An object with S3 class \code{"cv.ncvreg"}.  In addition to the
   \code{ncvreg} fit, the object contains:
-  \item{allerror}{A matrix with \code{nfolds} rows and \code{nlambda}
+  \item{E}{A matrix with \code{nfolds} rows and \code{nlambda}
     columns, containing the cross-validation error for each fit.}
-  \item{error}{The error for each value of \code{lambda}, averaged
+  \item{cve}{The error for each value of \code{lambda}, averaged
     across the cross-validation folds.}
-  \item{cv}{The index of \code{lambda} corresponding to the minimum
+  \item{lambda}{The sequence of regularization parameter values along
+    which the cross-validation error was calculated.}
+  \item{min}{The index of \code{lambda} corresponding to the minimum
     cross-validation error.}}
 \references{Breheny, P. and Huang, J. (2011) Coordinate descent
   algorithms for nonconvex penalized regression, with applications to
@@ -59,9 +61,11 @@ data(prostate)
 X <- as.matrix(prostate[,1:8])
 y <- prostate$lpsa
 
-fit <- cv.ncvreg(X,y)
-plot(fit$lambda,fit$error)
-beta <- fit$beta[,fit$cv]
+cv.fit <- cv.ncvreg(X,y)
+plot(cv.fit)
+
+fit <- ncvreg(X,y)
+beta <- fit$beta[,cv.fit$min]
 }
 \keyword{models}
 \keyword{regression}
