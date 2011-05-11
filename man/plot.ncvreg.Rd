@@ -4,12 +4,10 @@
 \description{Produces a plot of the coefficient paths for a fitted
   \code{"ncvreg"} object.}
 \usage{
-\method{plot}{ncvreg}(x, col, alpha=1, log.l=FALSE, shade=TRUE, ...)
+\method{plot}{ncvreg}(x, alpha=1, log.l=FALSE, shade=TRUE, ...)
 }
 \arguments{
   \item{x}{Fitted \code{"ncvreg"} model.}
-  \item{col}{Color of coefficient lines.  Recycled if
-    necessary. Defaults to an evenly spaced rainbow of colors.}
   \item{alpha}{Controls alpha-blending, helpful when the number of
     covariates is large.  Default is alpha=1.}
   \item{log.l}{Should horizontal axis be on the log scale?  Default is
