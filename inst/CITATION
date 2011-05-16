@@ -2,7 +2,7 @@ citHeader("To cite ncvreg in publications use:")
 
 citEntry(
   entry="Article",
-  author = "Breheny, Patrick and Huang, Jian",
+  author = personList(as.person("Patrick Breheny"),as.person("Jian Huang")),
   title = "Coordinate descent algorithms for nonconvex penalized regression,
 	with applications to biological feature selection",
   journal = "Annals of Applied Statistics",
