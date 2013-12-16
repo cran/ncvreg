@@ -88,6 +88,7 @@ penalty.factor=rep(1, ncol(X)), warn=TRUE, ...)
   \item{penalty}{Same as above.}
   \item{family}{Same as above.}
   \item{gamma}{Same as above.}
+  \item{alpha}{Same as above.}
   \item{convex.min}{The last index for which the objective function is
     locally convex.  The smallest value of lambda for which the
     objective function is convex is therefore \code{lambda[convex.min]},
