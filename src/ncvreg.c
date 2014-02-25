@@ -6,6 +6,8 @@
 #include <R_ext/Applic.h>
 SEXP cdfit_gaussian(SEXP X_, SEXP y_, SEXP penalty_, SEXP lambda, SEXP eps_, SEXP max_iter_, SEXP gamma_, SEXP multiplier, SEXP alpha_, SEXP dfmax_, SEXP user_);
 SEXP cdfit_binomial(SEXP X_, SEXP y_, SEXP penalty_, SEXP lambda, SEXP eps_, SEXP max_iter_, SEXP gamma_, SEXP multiplier, SEXP alpha_, SEXP dfmax_, SEXP user_, SEXP warn_);
+SEXP cdfit_poisson(SEXP X_, SEXP y_, SEXP penalty_, SEXP lambda, SEXP eps_, SEXP max_iter_, SEXP gamma_, SEXP multiplier, SEXP alpha_, SEXP dfmax_, SEXP user_, SEXP warn_);
+SEXP cdfit_raw(SEXP X_, SEXP y_, SEXP penalty_, SEXP lambda, SEXP eps_, SEXP max_iter_, SEXP gamma_, SEXP multiplier, SEXP alpha_, SEXP dfmax_);
 SEXP standardize(SEXP X_);
 SEXP maxprod(SEXP X_, SEXP y_, SEXP v_, SEXP m_);
 
@@ -31,6 +33,14 @@ double wsqsum(double *X, double *w, int n, int j) {
   int nn = n*j;
   double val=0;
   for (int i=0;i<n;i++) val += w[i] * pow(X[nn+i], 2);
+  return(val);
+}
+
+// Sum of squares of jth column of X
+double sqsum(double *X, int n, int j) {
+  int nn = n*j;
+  double val=0;
+  for (int i=0;i<n;i++) val += pow(X[nn+i], 2);
   return(val);
 }
 
@@ -80,7 +90,9 @@ double lasso(double z, double l1, double l2, double v) {
 
 static R_CallMethodDef callMethods[] = {
   {"cdfit_gaussian", (DL_FUNC) &cdfit_gaussian, 11},
+  {"cdfit_raw", (DL_FUNC) &cdfit_raw, 10},
   {"cdfit_binomial", (DL_FUNC) &cdfit_binomial, 12},
+  {"cdfit_poisson", (DL_FUNC) &cdfit_poisson, 12},
   {"standardize", (DL_FUNC) &standardize, 1},
   {"maxprod", (DL_FUNC) &maxprod, 4},
   {NULL, NULL, 0}
