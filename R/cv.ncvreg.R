@@ -1,16 +1,14 @@
 cv.ncvreg <- function(X, y, ..., nfolds=10, seed, trace=FALSE) {
   if (!missing(seed)) set.seed(seed)
   fit <- ncvreg(X=X, y=y, ...)
-  E <- matrix(NA, nrow=length(y), ncol=length(fit$lambda))
+  n <- length(y)
+  E <- matrix(NA, nrow=n, ncol=length(fit$lambda))
   if (fit$family=="binomial") {
     if (min(table(y)) < nfolds) stop("nfolds is larger than the smaller of 0/1 in the data; decrease nfolds")
     PE <- E
   }
-
-  n <- length(y)
-  if (fit$family=="gaussian" | fit$family=="poisson") {
-    cv.ind <- ceiling(sample(1:n)/n*nfolds)
-  } else if (fit$family=="binomial") {
+  
+  if (fit$family=="binomial") {
     ind1 <- which(y==1)
     ind0 <- which(y==0)
     n1 <- length(ind1)
@@ -20,6 +18,8 @@ cv.ncvreg <- function(X, y, ..., nfolds=10, seed, trace=FALSE) {
     cv.ind <- numeric(n)
     cv.ind[y==1] <- cv.ind1
     cv.ind[y==0] <- cv.ind0
+  } else {
+    cv.ind <- ceiling(sample(1:n)/n*nfolds)
   }
 
   for (i in 1:nfolds) {
@@ -38,11 +38,11 @@ cv.ncvreg <- function(X, y, ..., nfolds=10, seed, trace=FALSE) {
     E[cv.ind==i, 1:ncol(yhat)] <- loss.ncvreg(y2, yhat, fit$family)
     if (fit$family=="binomial") PE[cv.ind==i, 1:ncol(yhat)] <- (yhat < 0.5) == y2
   }
-
+  
   ## Eliminate saturated lambda values, if any
   ind <- which(apply(is.finite(E), 2, all))
   E <- E[,ind]
-  lambda <- fit$lambda[ind]
+  lambda <- fit$lambda
 
   ## Return
   cve <- apply(E, 2, mean)
@@ -50,6 +50,9 @@ cv.ncvreg <- function(X, y, ..., nfolds=10, seed, trace=FALSE) {
   min <- which.min(cve)
   
   val <- list(cve=cve, cvse=cvse, lambda=lambda, fit=fit, min=min, lambda.min=lambda[min], null.dev=mean(loss.ncvreg(y, rep(mean(y), n), fit$family)))
-  if (fit$family=="binomial") val$pe <- apply(PE[,ind], 2, mean)
+  if (fit$family=="binomial") {
+    pe <- apply(PE, 2, mean)
+    val$pe <- pe[is.finite(pe)]
+  }
   structure(val, class="cv.ncvreg")
 }
