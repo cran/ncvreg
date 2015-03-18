@@ -66,22 +66,22 @@ SEXP cdfit_cox_dh(SEXP X_, SEXP y_, SEXP d_, SEXP penalty_, SEXP lambda, SEXP ep
   double *haz = Calloc(n, double);
   double *rsk = Calloc(n, double);
   int *e = Calloc(p, int);
-  for (int j=0; j<p; j++) e[j] = 1;
+  for (int j=0; j<p; j++) e[j] = 0;
   double *eta = Calloc(n, double);
-  double xwr, xwx, mu, u, v, cutoff, l1, l2, shift, si, exp_eta, s, w;
+  for (int i=0; i<n; i++) eta[i] = 0;
+  double xwr, xwx, mu, u, v, cutoff, l1, l2, shift, si, exp_eta, s, w, nullDev;
   int converged, lstart;
 
-  // Initialization
-  for (int i=0; i<n; i++) eta[i] = 0;
-  // Setup z?  Crossprod at 0?
-  // for (int j=0; j<p; j++) z[j] = crossprod(X, s, n, j)/n;
-
   // If lam[0]=lam_max, skip lam[0] -- closed form sol'n available
+  rsk[n-1] = 1;
+  for (int i=n-2; i>=0; i--) rsk[i] = rsk[i+1] + 1;
+  nullDev = 0;
+  for (int i=0; i<n; i++) nullDev -= d[i]*log(rsk[i]);
   if (user) {
     lstart = 0;
   } else {
     lstart = 1;
-    // REAL(Loss)[0] = nullDev; ??
+    REAL(Loss)[0] = nullDev;
   }
 
   // Path
@@ -100,36 +100,24 @@ SEXP cdfit_cox_dh(SEXP X_, SEXP y_, SEXP d_, SEXP penalty_, SEXP lambda, SEXP ep
 	res = cleanupCox(e, eta, haz, rsk, beta, Loss, iter, residuals, weights);
 	return(res);
       }
-
-      // Determine eligible set
-      //if (strcmp(penalty, "lasso")==0) cutoff = 2*lam[l] - lam[l-1];
-      //if (strcmp(penalty, "MCP")==0) cutoff = lam[l] + gamma/(gamma-1)*(lam[l] - lam[l-1]);
-      //if (strcmp(penalty, "SCAD")==0) cutoff = lam[l] + gamma/(gamma-2)*(lam[l] - lam[l-1]);
-      //for (int j=0; j<p; j++) if (fabs(z[j]) > (cutoff * alpha * m[j])) e2[j] = 1;
-    }// else {
-
-      // Determine eligible set
-      /* double lmax = 0; */
-      /* for (int j=0; j<p; j++) if (fabs(z[j]) > lmax) lmax = fabs(z[j]); */
-      /* if (strcmp(penalty, "lasso")==0) cutoff = 2*lam[l] - lmax; */
-      /* if (strcmp(penalty, "MCP")==0) cutoff = lam[l] + gamma/(gamma-1)*(lam[l] - lmax); */
-      /* if (strcmp(penalty, "SCAD")==0) cutoff = lam[l] + gamma/(gamma-2)*(lam[l] - lmax); */
-      /* for (int j=0; j<p; j++) if (fabs(z[j]) > (cutoff * alpha * m[j])) e2[j] = 1; */
-    //    }
+    }
 
     while (INTEGER(iter)[l] < max_iter) {
       while (INTEGER(iter)[l] < max_iter) {
 	while (INTEGER(iter)[l] < max_iter) {
 	  INTEGER(iter)[l]++;
 	  REAL(Loss)[l] = 0;
+
 	  // Calculate haz, risk
 	  for (int i=0; i<n; i++) haz[i] = exp(eta[i]);
 	  rsk[n-1] = haz[n-1];
 	  for (int i=n-2; i>=0; i--) {
 	    rsk[i] = rsk[i+1] + haz[i];
 	  }
-	  //Rprintf("haz[1]=%f, haz[2]=%f, haz[3]=%f\n", haz[0], haz[1], haz[2]);
-	  //Rprintf("rsk[1]=%f, rsk[2]=%f, rsk[3]=%f\n", rsk[0], rsk[1], rsk[2]);
+	  for (int i=0; i<n; i++) {
+	    REAL(Loss)[l] += d[i]*eta[i] - d[i]*log(rsk[i]);
+	  }
+
 	  // Calculate h, r
 	  for (int j=0; j<n; j++) {
 	    h[j] = 0;
@@ -144,20 +132,14 @@ SEXP cdfit_cox_dh(SEXP X_, SEXP y_, SEXP d_, SEXP penalty_, SEXP lambda, SEXP ep
 	    if (h[j]==0) r[j]=0;
 	    else r[j] = s/h[j];
 	  }
-	  //Rprintf("h[1]=%f, h[2]=%f, h[3]=%f\n", h[0], h[1], h[2]);
-	  //Rprintf("r[1]=%f, r[2]=%f, r[3]=%f\n", r[0], r[1], r[2]);
-	  /*   mu = exp(eta[i]); */
-	  /*   w[i] = mu; */
-	  /*   s[i] = y[i] - mu; */
-	  /*   r[i] = s[i]/w[i]; */
-	  /*   if (y[i]!=0) REAL(Dev)[l] += y[i]*log(y[i]/mu); */
-	  /* } */
-	  /* if (REAL(Dev)[l]/nullDev < .01) { */
-	  /*   if (warn) warning("Model saturated; exiting..."); */
-	  /*   for (int ll=l; ll<L; ll++) INTEGER(iter)[ll] = NA_INTEGER; */
-	  /*   res = cleanupP(s, w, a, r, e1, e2, z, eta, beta0, beta, Dev, iter); */
-	  /*   return(res); */
-	  /* } */
+
+	  // Check for saturation
+	  if (REAL(Loss)[l]/nullDev < .01) {
+	    if (warn) warning("Model saturated; exiting...");
+	    for (int ll=l; ll<L; ll++) INTEGER(iter)[ll] = NA_INTEGER;
+	    res = cleanupCox(e, eta, haz, rsk, beta, Loss, iter, residuals, weights);
+	    return(res);
+	  }
 
 	  // Covariates
 	  for (int j=0; j<p; j++) {
@@ -197,18 +179,18 @@ SEXP cdfit_cox_dh(SEXP X_, SEXP y_, SEXP d_, SEXP penalty_, SEXP lambda, SEXP ep
 	  if (converged) break;
 	}
 
-	// Scan for violations in strong set
+	// Scan for violations
 	int violations = 0;
-	/* for (int j=0; j<p; j++) { */
-	/*   if (e1[j]==0 & e2[j]==1) { */
-	/*     z[j] = crossprod(X, s, n, j)/n; */
-	/*     l1 = lam[l] * m[j] * alpha; */
-	/*     if (fabs(z[j]) > l1) { */
-	/*       e1[j] = e2[j] = 1; */
-	/*       violations++; */
-	/*     } */
-	/*   } */
-	/* } */
+	for (int j=0; j<p; j++) {
+	  if (e[j]==0) {
+	    xwr = wcrossprod(X, r, h, n, j)/n;
+	    l1 = lam[l] * m[j] * alpha;
+	    if (fabs(xwr) > l1) {
+	      e[j] = 1;
+	      violations++;
+	    }
+	  }
+	}
 	if (violations==0) break;
       }
 

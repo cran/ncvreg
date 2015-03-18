@@ -1,9 +1,21 @@
-cv.ncvsurv <- function(X, y, ..., nfolds=10, seed, trace=FALSE) {
-  if (!missing(seed)) set.seed(seed)
+cv.ncvsurv <- function(X, y, ..., nfolds=10, seed, trace=FALSE, events.only=TRUE) {
+
+  ## Error checking
+  if (class(X) != "matrix") {
+    tmp <- try(X <- as.matrix(X), silent=TRUE)
+    if (class(tmp)[1] == "try-error") stop("X must be a matrix or able to be coerced to a matrix")
+  }
+  if (class(y) != "matrix") {
+    tmp <- try(y <- as.matrix(y), silent=TRUE)
+    if (class(tmp)[1] == "try-error") stop("y must be a matrix or able to be coerced to a matrix")
+    if (ncol(y)!=2) stop("y must have two columns for survival data: time-on-study and a censoring indicator")
+  }
+
   fit <- ncvsurv(X=X, y=y, ...)
   n <- nrow(X)
   E <- matrix(NA, nrow=n, ncol=length(fit$lambda))
   
+  if (!missing(seed)) set.seed(seed)
   cv.ind <- ceiling(sample(1:n)/n*nfolds)
 
   for (i in 1:nfolds) {
@@ -18,9 +30,13 @@ cv.ncvsurv <- function(X, y, ..., nfolds=10, seed, trace=FALSE) {
 
     X2 <- X[cv.ind==i, , drop=FALSE]
     y2 <- y[cv.ind==i,]
-    yhat <- predict(fit.i, X2, type="response")
     if (fit$model=="cox") {
-      E[cv.ind==i, 1:ncol(yhat)] <- coxCVL(y, cv.ind, yhat)
+      eta <- predict(fit.i, X)
+      ll <- loss.ncvsurv(y, eta)
+      for (ii in which(cv.ind==i)) {
+        eta.ii <- predict(fit.i, X[-ii,])
+        E[ii, 1:ncol(eta)] <- -2*(ll-loss.ncvsurv(y[-ii,], eta.ii))
+      }
     }
   }
   
@@ -30,10 +46,11 @@ cv.ncvsurv <- function(X, y, ..., nfolds=10, seed, trace=FALSE) {
   lambda <- fit$lambda
 
   ## Return
+  if (events.only) E <- E[y[,2]==1,]
   cve <- apply(E, 2, mean)
-  cvse <- apply(E, 2, sd) / sqrt(n)
+  cvse <- apply(E, 2, sd) / sqrt(nrow(E))
   min <- which.min(cve)
   
-  val <- list(cve=cve, cvse=cvse, lambda=lambda, fit=fit, min=min, lambda.min=lambda[min], null.dev=NA)
-  structure(val, class="cv.ncvsurv")
+  val <- list(cve=cve, cvse=cvse, lambda=lambda, fit=fit, min=min, lambda.min=lambda[min], null.dev=cve[1])
+  structure(val, class=c("cv.ncvsurv", "cv.ncvreg"))
 }
