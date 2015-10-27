@@ -229,3 +229,16 @@ S <- predict(fit, X, lambda=0.05, type='survival')
 plot(S, xlim=c(0,200))
 S <- predict(fit, X, lambda=0.44, type='survival')
 plot(S, xlim=c(0,200))
+
+##################################
+.test = "AUC calculation works" ##
+##################################
+data(Lung, package='ncvreg')
+X <- Lung$X
+y <- Lung$y
+
+cvfit <- cv.ncvsurv(X, y, returnY=TRUE)
+AUC <- auc(cvfit)
+AUC[length(AUC)]
+fit <- coxph(y~X[,1:8])
+survConcordance(y~predict(fit))$concordance

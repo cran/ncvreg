@@ -1,23 +1,24 @@
-cv.ncvreg <- function(X, y, ..., cluster, nfolds=10, seed, cv.ind, trace=FALSE) {
+cv.ncvreg <- function(X, y, ..., cluster, nfolds=10, seed, cv.ind, returnY=FALSE, trace=FALSE) {
 
-  ## Error checking
-  if (!missing(seed)) set.seed(seed)
+  # Coersion
   if (class(X) != "matrix") {
     tmp <- try(X <- model.matrix(~0+., data=X), silent=TRUE)
     if (class(tmp)[1] == "try-error") stop("X must be a matrix or able to be coerced to a matrix")
   }
+  if (storage.mode(X)=="integer") storage.mode(X) <- "double"
   if (class(y) != "numeric") {
     tmp <- try(y <- as.numeric(y), silent=TRUE)
     if (class(tmp)[1] == "try-error") stop("y must numeric or able to be coerced to numeric")
-  }  
-  
+  }
+
   fit <- ncvreg(X=X, y=y, ...)
   n <- length(y)
-  E <- matrix(NA, nrow=n, ncol=length(fit$lambda))
+  E <- Y <- matrix(NA, nrow=n, ncol=length(fit$lambda))
   if (fit$family=="binomial") {
     PE <- E
+    if (!identical(sort(unique(y)), 0:1)) y <- as.numeric(y==max(y))
   }
-  
+
   if (!missing(seed)) set.seed(seed)
   if (missing(cv.ind)) {
     if (fit$family=="binomial" & (min(table(y)) > nfolds)) {
@@ -34,9 +35,11 @@ cv.ncvreg <- function(X, y, ..., cluster, nfolds=10, seed, cv.ind, trace=FALSE) 
       cv.ind <- ceiling(sample(1:n)/n*nfolds)
     }
   }
-  
+
   cv.args <- list(...)
   cv.args$lambda <- fit$lambda
+  cv.args$warn <- FALSE
+  cv.args$convex <- FALSE
   if (!missing(cluster)) {
     if (!("cluster" %in% class(cluster))) stop("cluster is not of class 'cluster'; see ?makeCluster")
     parallel::clusterExport(cluster, c("cv.ind","fit","X", "y", "cv.args"), envir=environment())
@@ -53,33 +56,34 @@ cv.ncvreg <- function(X, y, ..., cluster, nfolds=10, seed, cv.ind, trace=FALSE) 
     }
     E[cv.ind==i, 1:res$nl] <- res$loss
     if (fit$family=="binomial") PE[cv.ind==i, 1:res$nl] <- res$pe
-    ## Y[cv.ind==i, 1:res$nl] <- res$yhat
+    Y[cv.ind==i, 1:res$nl] <- res$yhat
   }
-  
+
   ## Eliminate saturated lambda values, if any
   ind <- which(apply(is.finite(E), 2, all))
   E <- E[,ind]
-  ##Y <- Y[,ind]
+  Y <- Y[,ind]
   lambda <- fit$lambda[ind]
 
   ## Return
   cve <- apply(E, 2, mean)
   cvse <- apply(E, 2, sd) / sqrt(n)
   min <- which.min(cve)
-  
-  val <- list(cve=cve, cvse=cvse, lambda=lambda, fit=fit, min=min, lambda.min=lambda[min], null.dev=mean(loss.ncvreg(y, rep(mean(y), n), fit$family)))
+
+  val <- list(cve=cve, cvse=cvse, lambda=lambda, fit=fit, min=min, lambda.min=lambda[min],
+              null.dev=mean(loss.ncvreg(y, rep(mean(y), n), fit$family)))
   if (fit$family=="binomial") {
     pe <- apply(PE, 2, mean)
     val$pe <- pe[is.finite(pe)]
   }
+  if (returnY) val$Y <- Y
   structure(val, class="cv.ncvreg")
 }
 cvf <- function(i, XX, y, cv.ind, cv.args) {
   cv.args$X <- XX[cv.ind!=i, , drop=FALSE]
   cv.args$y <- y[cv.ind!=i]
-  cv.args$warn <- FALSE
   fit.i <- do.call("ncvreg", cv.args)
-  
+
   X2 <- XX[cv.ind==i, , drop=FALSE]
   y2 <- y[cv.ind==i]
   yhat <- matrix(predict(fit.i, X2, type="response"), length(y2))
