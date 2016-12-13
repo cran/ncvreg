@@ -1,5 +1,5 @@
 ncvsurv <- function(X, y, penalty=c("MCP", "SCAD", "lasso"), gamma=switch(penalty, SCAD=3.7, 3),
-                    alpha=1, lambda.min=ifelse(n>p,.001,.05), nlambda=100, lambda, eps=.001, max.iter=1000,
+                    alpha=1, lambda.min=ifelse(n>p,.001,.05), nlambda=100, lambda, eps=1e-4, max.iter=1000,
                     convex=TRUE, dfmax=p, penalty.factor=rep(1, ncol(X)), warn=TRUE, returnX=FALSE, ...) {
 
   # Coersion
@@ -53,6 +53,7 @@ ncvsurv <- function(X, y, penalty=c("MCP", "SCAD", "lasso"), gamma=switch(penalt
   b <- matrix(res[[1]], p, nlambda)
   loss <- -1*res[[2]]
   iter <- res[[3]]
+  W <- matrix(res[[4]], n, nlambda)
 
   ## Eliminate saturated lambda values, if any
   ind <- !is.na(iter)
@@ -73,7 +74,7 @@ ncvsurv <- function(X, y, penalty=c("MCP", "SCAD", "lasso"), gamma=switch(penalt
 
   ## Names
   varnames <- if (is.null(colnames(X))) paste("V",1:ncol(X),sep="") else colnames(X)
-  dimnames(beta) <- list(varnames, round(lambda,digits=4))
+  dimnames(beta) <- list(varnames, lamNames(lambda))
 
   ## Output
   val <- structure(list(beta = beta,
@@ -87,7 +88,7 @@ ncvsurv <- function(X, y, penalty=c("MCP", "SCAD", "lasso"), gamma=switch(penalt
                         penalty.factor = penalty.factor,
                         n = n),
                    class = c("ncvsurv", "ncvreg"))
-  val$W <- exp(sweep(XX %*% b, 2, offset, "-"))
+  val$W <- exp(sweep(W, 2, offset, "-"))
   val$time <- yy
   val$fail <- Delta
   if (returnX) {
