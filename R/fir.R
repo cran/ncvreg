@@ -6,11 +6,11 @@ fir <- function(fit) {
     R <- apply(fit$W, 2, function(x) rev(cumsum(rev(x))))
     pD <- fit$W/R
     W <- apply(fit$fail*pD*(1-pD), 2, cumsum)
-    tau <- apply(W, 2, mean)
+    tau <- sqrt(apply(W, 2, mean))
   } else {
     p <- dim(fit$beta)[1]-1
     if (fit$family=="gaussian") {
-      tau <- sqrt(fit$loss/(fit$n - p + 1))
+      tau <- sqrt(fit$loss/(fit$n - S + 1))
     } else if (fit$family=="binomial") {
       tau <- sqrt(fit$wMean)
     } else {
