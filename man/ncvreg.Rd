@@ -38,8 +38,8 @@ warn=TRUE, returnX, ...)
   \item{eps}{Convergence threshhold.  The algorithm iterates until the
     RMSD for the change in linear predictors for each coefficient is
     less than \code{eps}.  Default is \code{1e-4}.}
-  \item{max.iter}{Maximum number of iterations (total across entire path).
-    Default is 10000.}
+  \item{max.iter}{Maximum number of iterations (total across entire
+    path). Default is 10000.}
   \item{convex}{Calculate index for which objective function ceases to
     be locally convex?  Default is TRUE.}
   \item{dfmax}{Upper bound for the number of nonzero coefficients.
@@ -57,7 +57,7 @@ warn=TRUE, returnX, ...)
   \item{warn}{Return warning messages for failures to converge and model
     saturation?  Default is TRUE.}
   \item{returnX}{Return the standardized design matrix along with the
-    fit?  By default, this option is turned on if X is under 10 MB, but
+    fit?  By default, this option is turned on if X is under 100 MB, but
     turned off for larger matrices to preserve memory.  Note that
     certain methods, such as \code{\link{summary.ncvreg}} require access
     to the design matrix and may not be able to run if
@@ -70,107 +70,118 @@ warn=TRUE, returnX, ...)
   logistic regression models, some care is taken to avoid model
   saturation; the algorithm may exit early in this setting.  The
   objective function is defined to be
-  \deqn{\frac{1}{2n}\textrm{RSS} + \textrm{penalty}}{RSS/(2*n) +
-    penalty}
-  for \code{"gaussian"} and
-  \deqn{-\frac{1}{n}\ell + \textrm{penalty}}{-(1/n) loglik + penalty}
-  for \code{"binomial"} or \code{"poisson"}, where the likelihood is
-  from a traditional generalized linear model assuming the canonical
-  link (logit for \code{"binomial"}; log for \code{"poisson"}).\cr
-  \cr
+  \deqn{Q(\beta|X, y) = \frac{1}{n} L(\beta|X, y) +
+    P_\lambda(\beta)}{Q(\beta|X, y) = (1/n)*L(\beta|X, y) +
+    P(\beta, \lambda),}
+  where the loss function L is the deviance (-2 times the log
+  likelihood) for the specified outcome distribution
+  (gaussian/binomial/poisson).
+  \href{http://pbreheny.github.io/ncvreg/articles/web/models.html}{See
+    here for more details}.
+  
   This algorithm is stable, very efficient, and generally converges
-  quite rapidly to the solution.  For GLMs, adaptive rescaling (see
-  reference) is used.\cr
-  \cr
-  The convexity diagnostics rely on a fine covering of
-  (lambda.min,lambda.max); choosing a low value of \code{nlambda} may
-  produce unreliable results.}
+  quite rapidly to the solution.  For GLMs,
+  \href{http://myweb.uiowa.edu/pbreheny/pdf/Breheny2011.pdf}{adaptive
+    rescaling} is used.}
 \value{
   An object with S3 class \code{"ncvreg"} containing:
-  \item{beta}{The fitted matrix of coefficients.  The number of rows is
-    equal to the number of coefficients, and the number of columns is
-    equal to \code{nlambda}.}
-  \item{iter}{A vector of length \code{nlambda} containing the number
-    of iterations until convergence at each value of \code{lambda}.}
-  \item{lambda}{The sequence of regularization parameter values in the
-    path.}
-  \item{penalty}{Same as above.}
-  \item{family}{Same as above.}
-  \item{gamma}{Same as above.}
-  \item{alpha}{Same as above.}
-  \item{convex.min}{The last index for which the objective function is
-    locally convex.  The smallest value of lambda for which the
-    objective function is convex is therefore \code{lambda[convex.min]},
-    with corresponding coefficients \code{beta[,convex.min]}.}
-  \item{loss}{A vector containing either the residual sum of squares
-    (\code{"gaussian"}) or negative log-likelihood (\code{"binomial"}
-    and \code{"poisson"}) of the fitted model at each value of
-    \code{lambda}.}
-  \item{penalty.factor}{Same as above.}
-  \item{n}{Sample size.}
-  
-Additionally, if \code{returnX=TRUE}, the object will also contain
-  
-  \item{X}{The standardized design matrix.}
-  \item{y}{The response, centered if \code{family='gaussian'}.}
+  \describe{
+    \item{beta}{The fitted matrix of coefficients.  The number of rows
+      is equal to the number of coefficients, and the number of columns
+      is equal to \code{nlambda}.}
+    \item{iter}{A vector of length \code{nlambda} containing the number
+      of iterations until convergence at each value of \code{lambda}.}
+    \item{lambda}{The sequence of regularization parameter values in the
+      path.}
+    \item{penalty}{Same as above.}
+    \item{family}{Same as above.}
+    \item{gamma}{Same as above.}
+    \item{alpha}{Same as above.}
+    \item{convex.min}{The last index for which the objective function is
+      locally convex.  The smallest value of lambda for which the
+      objective function is convex is therefore
+      \code{lambda[convex.min]}, with corresponding coefficients
+      \code{beta[,convex.min]}.} 
+    \item{loss}{A vector containing the deviance (i.e., the loss) at
+      each value of \code{lambda}.  Note that for \code{gaussian}
+      models, the loss is simply the residual sum of squares.}
+    \item{penalty.factor}{Same as above.}
+    \item{n}{Sample size.}
+  }
+
+  Additionally, if \code{returnX=TRUE}, the object will also contain
+
+  \describe{
+    \item{X}{The standardized design matrix.}
+    \item{y}{The response, centered if \code{family='gaussian'}.}
+  }
 }
 \references{Breheny, P. and Huang, J. (2011) Coordinate descent
   algorithms for nonconvex penalized regression, with applications to
   biological feature selection. Ann. Appl. Statist., 5: 232-253.}
-\author{Patrick Breheny <patrick-breheny@uiow.edu>}
+\author{Patrick Breheny}
 \seealso{\code{\link{plot.ncvreg}}, \code{\link{cv.ncvreg}}}
 \examples{
 # Linear regression --------------------------------------------------
 data(Prostate)
+X <- Prostate$X
+y <- Prostate$y
 
-par(mfrow=c(2,2))
-fit <- ncvreg(Prostate$X, Prostate$y)
+op <- par(mfrow=c(2,2))
+fit <- ncvreg(X, y)
 plot(fit, main=expression(paste(gamma,"=",3)))
-fit <- ncvreg(Prostate$X, Prostate$y, gamma=10)
+fit <- ncvreg(X, y, gamma=10)
 plot(fit, main=expression(paste(gamma,"=",10)))
-fit <- ncvreg(Prostate$X, Prostate$y, gamma=1.5)
+fit <- ncvreg(X, y, gamma=1.5)
 plot(fit, main=expression(paste(gamma,"=",1.5)))
-fit <- ncvreg(Prostate$X, Prostate$y, penalty="SCAD")
+fit <- ncvreg(X, y, penalty="SCAD")
 plot(fit, main=expression(paste("SCAD, ",gamma,"=",3)))
+par(op)
 
-par(mfrow=c(2,2))
-fit <- ncvreg(Prostate$X, Prostate$y)
+op <- par(mfrow=c(2,2))
+fit <- ncvreg(X, y)
 plot(fit, main=expression(paste(alpha,"=",1)))
-fit <- ncvreg(Prostate$X, Prostate$y, alpha=0.9)
+fit <- ncvreg(X, y, alpha=0.9)
 plot(fit, main=expression(paste(alpha,"=",0.9)))
-fit <- ncvreg(Prostate$X, Prostate$y, alpha=0.5)
+fit <- ncvreg(X, y, alpha=0.5)
 plot(fit, main=expression(paste(alpha,"=",0.5)))
-fit <- ncvreg(Prostate$X, Prostate$y, alpha=0.1)
+fit <- ncvreg(X, y, alpha=0.1)
 plot(fit, main=expression(paste(alpha,"=",0.1)))
+par(op)
 
-par(mfrow=c(2,2))
-fit <- ncvreg(Prostate$X, Prostate$y)
-plot(mfdr(fit))            ## Independence approximation
-plot(mfdr(fit), type="EF") ## Independence approximation
-perm.fit <- perm.ncvreg(Prostate$X, Prostate$y)
+op <- par(mfrow=c(2,2))
+fit <- ncvreg(X, y)
+plot(mfdr(fit))             # Independence approximation
+plot(mfdr(fit), type="EF")  # Independence approximation
+perm.fit <- perm.ncvreg(X, y)
 plot(perm.fit)
 plot(perm.fit, type="EF")
+par(op)
 
 # Logistic regression ------------------------------------------------
 data(Heart)
+X <- Heart$X
+y <- Heart$y
 
-par(mfrow=c(2,2))
-fit <- ncvreg(Heart$X, Heart$y, family="binomial")
+op <- par(mfrow=c(2,2))
+fit <- ncvreg(X, y, family="binomial")
 plot(fit, main=expression(paste(gamma,"=",3)))
-fit <- ncvreg(Heart$X, Heart$y, family="binomial", gamma=10)
+fit <- ncvreg(X, y, family="binomial", gamma=10)
 plot(fit, main=expression(paste(gamma,"=",10)))
-fit <- ncvreg(Heart$X, Heart$y, family="binomial", gamma=1.5)
+fit <- ncvreg(X, y, family="binomial", gamma=1.5)
 plot(fit, main=expression(paste(gamma,"=",1.5)))
-fit <- ncvreg(Heart$X, Heart$y, family="binomial", penalty="SCAD")
+fit <- ncvreg(X, y, family="binomial", penalty="SCAD")
 plot(fit, main=expression(paste("SCAD, ",gamma,"=",3)))
+par(op)
 
-par(mfrow=c(2,2))
-fit <- ncvreg(Heart$X, Heart$y, family="binomial")
+op <- par(mfrow=c(2,2))
+fit <- ncvreg(X, y, family="binomial")
 plot(fit, main=expression(paste(alpha,"=",1)))
-fit <- ncvreg(Heart$X, Heart$y, family="binomial", alpha=0.9)
+fit <- ncvreg(X, y, family="binomial", alpha=0.9)
 plot(fit, main=expression(paste(alpha,"=",0.9)))
-fit <- ncvreg(Heart$X, Heart$y, family="binomial", alpha=0.5)
+fit <- ncvreg(X, y, family="binomial", alpha=0.5)
 plot(fit, main=expression(paste(alpha,"=",0.5)))
-fit <- ncvreg(Heart$X, Heart$y, family="binomial", alpha=0.1)
+fit <- ncvreg(X, y, family="binomial", alpha=0.1)
 plot(fit, main=expression(paste(alpha,"=",0.1)))
+par(op)
 }

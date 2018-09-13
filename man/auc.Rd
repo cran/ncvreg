@@ -8,9 +8,9 @@
 \method{AUC}{cv.ncvsurv}(obj, ...)
 }
 \arguments{
-  \item{obj}{A \code{cv.ncvsurv} object.  You must run \code{cv.ncvsurv}
-  with the option \code{returnY=TRUE} in order for \code{AUC} to work.}
-  \item{\dots}{For S3 method compatibility.}
+\item{obj}{A \code{cv.ncvsurv} object.  You must run \code{cv.ncvsurv}  with the option \code{returnY=TRUE} in order for \code{AUC}  to work.}
+
+\item{\dots}{For S3 method compatibility?}
 }
 \details{
   The area under the curve (AUC), or equivalently, the concordance
@@ -24,7 +24,9 @@
 \references{van Houwelingen H, Putter H (2011). Dynamic Prediction in
   Clinical Survival Analysis.  CRC Press.}
 \author{Patrick Breheny, Brandon Butcher, and Lawrence Hunsicker}
-\seealso{\code{\link{cv.ncvsurv}}, \code{survConcordance}}
+\seealso{\code{\link{cv.ncvsurv}},
+  \code{\link[survival]{survConcordance}}
+}
 \examples{
 data(Lung)
 X <- Lung$X
@@ -32,7 +34,7 @@ y <- Lung$y
 
 cvfit <- cv.ncvsurv(X, y, returnY=TRUE)
 head(AUC(cvfit))
-ll <- log(cvfit$fit$lambda)
-plot(ll, AUC(cvfit), xlim=rev(range(ll)), lwd=3, type='l',
-     xlab=expression(log(lambda)), ylab='AUC')
+lam <- cvfit$lambda
+plot(lam, AUC(cvfit), xlim=rev(range(lam)), lwd=3, type='l',
+     las=1, xlab=expression(lambda), ylab='AUC')
 }

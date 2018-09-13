@@ -28,8 +28,6 @@ cv.ncvsurv <- function(X, y, ..., cluster, nfolds=10, seed, fold, se=c('quick', 
     fold <- numeric(n)
     fold[fit$fail==1] <- fold1
     fold[fit$fail==0] <- fold0
-  } else {
-    fold <- ceiling(sample(1:n)/(n+sqrt(.Machine$double.eps))*nfolds)
   }
 
   Y <- matrix(NA, nrow=n, ncol=length(fit$lambda))
@@ -63,15 +61,15 @@ cv.ncvsurv <- function(X, y, ..., cluster, nfolds=10, seed, fold, se=c('quick', 
   # Return
   if (se == "quick") {
     L <- loss.ncvsurv(y, Y, total=FALSE)
-    cve <- apply(L, 2, sum)
-    cvse <- apply(L, 2, sd)*sqrt(nrow(L))
+    cve <- apply(L, 2, sum)/sum(fit$fail)
+    cvse <- apply(L, 2, sd)*sqrt(nrow(L))/sum(fit$fail)
   } else {
-    cve <- as.numeric(loss.ncvsurv(y, Y))
-    cvse <- se.ncvsurv(y, Y)
+    cve <- as.numeric(loss.ncvsurv(y, Y))/sum(fit$fail)
+    cvse <- se.ncvsurv(y, Y)/sum(fit$fail)
   }
   min <- which.min(cve)
 
-  val <- list(cve=cve, cvse=cvse, lambda=lambda, fit=fit, min=min, lambda.min=lambda[min], null.dev=cve[1], fold=fold)
+  val <- list(cve=cve, cvse=cvse, fold=fold, lambda=lambda, fit=fit, min=min, lambda.min=lambda[min], null.dev=cve[1], fold=fold)
   if (returnY) val$Y <- Y
   structure(val, class=c("cv.ncvsurv", "cv.ncvreg"))
 }

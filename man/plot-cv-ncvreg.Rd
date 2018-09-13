@@ -1,15 +1,15 @@
 \name{plot.cv.ncvreg}
 \alias{plot.cv.ncvreg}
-\title{Plots the cross-validation curve from a "cv.ncvreg" object}
-\description{Plots the cross-validation curve from a "cv.ncvreg"
-  object, along with standard error bars.}
+\title{Plots the cross-validation curve from a cv.ncvreg object}
+\description{Plots the cross-validation curve from a \code{cv.ncvreg} or
+  \code{cv.ncvsurv} object, along with standard error bars.}
 \usage{
 \method{plot}{cv.ncvreg}(x, log.l=TRUE, type=c("cve", "rsq", "scale",
 "snr", "pred", "all"), selected=TRUE, vertical.line=TRUE, col="red",
 ...) 
 }
 \arguments{
-  \item{x}{A \code{"cv.ncvreg"} object.}
+  \item{x}{A \code{cv.ncvreg} or \code{cv.ncvsurv} object.}
   \item{log.l}{Should horizontal axis be on the log scale?  Default is
     TRUE.}
   \item{type}{What to plot on the vertical axis.  \code{cve} plots the
@@ -32,26 +32,35 @@
 \details{
   Error bars representing approximate 68\% confidence intervals are
   plotted along with the estimates at value of \code{lambda}.  For
-  \code{rsq} and \code{snr}, these confidence intervals are quite crude,
-  especially near zero, and will hopefully be improved upon in later
-  versions of \code{ncvreg}.}
+  \code{rsq} and \code{snr} applied to models other than linear
+  regression, the Cox-Snell R-squared is used.}
 \references{Breheny, P. and Huang, J. (2011) Coordinate descent
   algorithms for nonconvex penalized regression, with applications to
   biological feature selection. Ann. Appl. Statist., 5: 232-253.}
-\author{Patrick Breheny <patrick-breheny@uiowa.edu>}
+\author{Patrick Breheny}
 \seealso{\code{\link{ncvreg}}, \code{\link{cv.ncvreg}}}
 \examples{
 # Linear regression --------------------------------------------------
 data(Prostate)
 cvfit <- cv.ncvreg(Prostate$X, Prostate$y)
 plot(cvfit)
-par(mfrow=c(2,2))
+op <- par(mfrow=c(2,2))
 plot(cvfit, type="all")
+par(op)
 
 # Logistic regression ------------------------------------------------
 data(Heart)
 cvfit <- cv.ncvreg(Heart$X, Heart$y, family="binomial")
 plot(cvfit)
-par(mfrow=c(2,2))
+op <- par(mfrow=c(2,2))
 plot(cvfit, type="all")
+par(op)
+
+# Cox regression -----------------------------------------------------
+data(Lung)
+cvfit <- cv.ncvsurv(Lung$X, Lung$y)
+op <- par(mfrow=c(1,2))
+plot(cvfit)
+plot(cvfit, type="rsq")
+par(op)
 }
