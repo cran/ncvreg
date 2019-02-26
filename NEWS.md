@@ -1,3 +1,9 @@
+# ncvreg 3.11-1 (2019-02-26)
+  * Fixed: Leave-one-out cross-validation now works correctly for logistic
+    regression
+  * Documentation: Added documentation (online) for local mfdr
+  * Documentation: Fixed some broken links and typos
+
 # ncvreg 3.11-0 (2018-08-30)
   * Change: returnX now turned on by default if X < 100 Mb (used to be 10 Mb)
   * Change: summary.ncvreg now based solely on local mfdr
@@ -5,6 +11,8 @@
     of models
   * Change: R^2 now consistently uses the Cox-Snell definition for all types
     of models
+  * Change: cv.ncvreg and cv.ncvsurv now return fold assignments
+  * Fixed: Can now pass fold assignments to cv.ncvsurv
   * Documentation: Lots of updates
   * Documentation: vignette now html (used to be pdf)
   * Documentation: pkgdown website
