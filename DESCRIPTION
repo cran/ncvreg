@@ -1,11 +1,11 @@
 Package: ncvreg
 Title: Regularization Paths for SCAD and MCP Penalized Regression
         Models
-Version: 3.11-1
-Date: 2019-02-26
+Version: 3.11.2
+Date: 2020-02-13
 Authors@R: person("Patrick", "Breheny", role=c("aut","cre"),
-  email="patrick-breheny@uiowa.edu", comment=c(ORCID="000-0002-0650-1119"))
-Suggests: survival, parallel, knitr
+  email="patrick-breheny@uiowa.edu", comment=c(ORCID="0000-0002-0650-1119"))
+Suggests: survival, parallel, knitr, ashr
 VignetteBuilder: knitr
 Description: Fits regularization paths for linear regression, GLM, and Cox
   regression models using lasso or nonconvex penalties, in particular the
@@ -18,10 +18,11 @@ License: GPL-3
 URL: http://pbreheny.github.io/ncvreg,
         https://github.com/pbreheny/ncvreg
 LazyData: TRUE
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2
+Encoding: UTF-8
 NeedsCompilation: yes
-Packaged: 2019-02-26 18:46:32 UTC; pbreheny
-Author: Patrick Breheny [aut, cre] (<https://orcid.org/000-0002-0650-1119>)
+Packaged: 2020-02-13 14:38:10 UTC; pbreheny
+Author: Patrick Breheny [aut, cre] (<https://orcid.org/0000-0002-0650-1119>)
 Maintainer: Patrick Breheny <patrick-breheny@uiowa.edu>
 Repository: CRAN
-Date/Publication: 2019-02-26 19:30:04 UTC
+Date/Publication: 2020-02-13 15:00:05 UTC

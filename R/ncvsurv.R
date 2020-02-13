@@ -4,33 +4,33 @@ ncvsurv <- function(X, y, penalty=c("MCP", "SCAD", "lasso"), gamma=switch(penalt
 
   # Coersion
   penalty <- match.arg(penalty)
-  if (class(X) != "matrix") {
+  if (!inherits(X, "matrix")) {
     tmp <- try(X <- model.matrix(~0+., data=X), silent=TRUE)
-    if (class(tmp)[1] == "try-error") stop("X must be a matrix or able to be coerced to a matrix")
+    if (inherits(tmp, "try-error")) stop("X must be a matrix or able to be coerced to a matrix", call.=FALSE)
   }
   if (storage.mode(X)=="integer") storage.mode(X) <- "double"
-  if (class(y) != "matrix") {
+  if (!inherits(y, "matrix")) {
     tmp <- try(y <- as.matrix(y), silent=TRUE)
-    if (class(tmp)[1] == "try-error") stop("y must be a matrix or able to be coerced to a matrix")
-    if (ncol(y)!=2) stop("y must have two columns for survival data: time-on-study and a censoring indicator")
+    if (inherits(tmp, "try-error")) stop("y must be a matrix or able to be coerced to a matrix", call.=FALSE)
+    if (ncol(y) != 2) stop("y must have two columns for survival data: time-on-study and a censoring indicator", call.=FALSE)
   }
-  if (storage.mode(y)=="integer") storage.mode(y) <- "double"
-  if (storage.mode(penalty.factor) != "double") storage.mode(penalty.factor) <- "double"
+  if (typeof(y) == "integer") storage.mode(y) <- "double"
+  if (typeof(penalty.factor) != "double") storage.mode(penalty.factor) <- "double"
 
   ## Error checking
-  if (gamma <= 1 & penalty=="MCP") stop("gamma must be greater than 1 for the MC penalty")
-  if (gamma <= 2 & penalty=="SCAD") stop("gamma must be greater than 2 for the SCAD penalty")
-  if (nlambda < 2) stop("nlambda must be at least 2")
-  if (alpha <= 0) stop("alpha must be greater than 0; choose a small positive number instead")
-  if (length(penalty.factor)!=ncol(X)) stop("penalty.factor does not match up with X")
-  if (any(is.na(y)) | any(is.na(X))) stop("Missing data (NA's) detected.  Take actions (e.g., removing cases, removing features, imputation) to eliminate missing data before passing X and y to ncvreg")
+  if (gamma <= 1 & penalty=="MCP") stop("gamma must be greater than 1 for the MC penalty", call.=FALSE)
+  if (gamma <= 2 & penalty=="SCAD") stop("gamma must be greater than 2 for the SCAD penalty", call.=FALSE)
+  if (nlambda < 2) stop("nlambda must be at least 2", call.=FALSE)
+  if (alpha <= 0) stop("alpha must be greater than 0; choose a small positive number instead", call.=FALSE)
+  if (length(penalty.factor)!=ncol(X)) stop("penalty.factor does not match up with X", call.=FALSE)
+  if (any(is.na(y)) | any(is.na(X))) stop("Missing data (NA's) detected.  Take actions (e.g., removing cases, removing features, imputation) to eliminate missing data before passing X and y to ncvreg", call.=FALSE)
 
   ## Set up XX, yy, lambda
-  tOrder <- order(y[,1])
-  yy <- as.numeric(y[tOrder,1])
-  Delta <- y[tOrder,2]
+  tOrder <- order(y[, 1])
+  yy <- as.double(y[tOrder, 1])
+  Delta <- y[tOrder, 2]
   n <- length(yy)
-  XX <- std(X[tOrder,,drop=FALSE])
+  XX <- std(X[tOrder, , drop=FALSE])
   if (sys.nframe() > 1 && sys.call(-1)[[1]]=="local_mfdr") return(list(X=XX, time=yy, fail=Delta))
   ns <- attr(XX, "nonsingular")
   penalty.factor <- penalty.factor[ns]
@@ -57,7 +57,7 @@ ncvsurv <- function(X, y, penalty=c("MCP", "SCAD", "lasso"), gamma=switch(penalt
   iter <- iter[ind]
   lambda <- lambda[ind]
   loss <- loss[ind]
-  Eta <- Eta[,ind,drop=FALSE]
+  Eta <- Eta[, ind, drop=FALSE]
   if (warn & sum(iter)==max.iter) warning("Algorithm failed to converge for some values of lambda")
 
   ## Local convexity?
@@ -70,7 +70,7 @@ ncvsurv <- function(X, y, penalty=c("MCP", "SCAD", "lasso"), gamma=switch(penalt
   offset <- -crossprod(attr(XX, "center")[ns], bb)
 
   ## Names
-  varnames <- if (is.null(colnames(X))) paste("V",1:ncol(X),sep="") else colnames(X)
+  varnames <- if (is.null(colnames(X))) paste("V", 1:ncol(X), sep="") else colnames(X)
   dimnames(beta) <- list(varnames, lamNames(lambda))
 
   ## Output

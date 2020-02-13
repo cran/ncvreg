@@ -3,14 +3,14 @@ predict.ncvreg <- function(object, X, type=c("link", "response", "class", "coeff
   type <- match.arg(type)
   beta <- coef.ncvreg(object, lambda=lambda, which=which, drop=FALSE)
   if (type=="coefficients") return(beta)
-  if (class(object)[1]=='ncvreg') {
+  if (!inherits(object, 'ncvsurv')) {
     alpha <- beta[1,]
-    beta <- beta[-1,,drop=FALSE]
+    beta <- beta[-1, , drop=FALSE]
   } else {
     beta <- beta
   }
 
-  if (type=="nvars") return(apply(beta!=0,2,sum))
+  if (type=="nvars") return(apply(beta!=0, 2, sum))
   if (type=="vars") return(drop(apply(beta!=0, 2, FUN=which)))
   eta <- sweep(X %*% beta, 2, alpha, "+")
   if (type=="link" || object$family=="gaussian") return(drop(eta))
@@ -22,20 +22,20 @@ predict.ncvreg <- function(object, X, type=c("link", "response", "class", "coeff
     if (object$family=="binomial") {
       return(drop(1*(eta>0)))
     } else {
-      stop("type='class' can only be used with family='binomial'")
+      stop("type='class' can only be used with family='binomial'", call.=FALSE)
     }
   }
 }
 coef.ncvreg <- function(object, lambda, which=1:length(object$lambda), drop=TRUE, ...) {
   if (!missing(lambda)) {
     if (max(lambda) > max(object$lambda) | min(lambda) < min(object$lambda)) {
-      stop('Supplied lambda value(s) are outside the range of the model fit.')
+      stop('Supplied lambda value(s) are outside the range of the model fit.', call.=FALSE)
     }
-    ind <- approx(object$lambda,seq(object$lambda),lambda)$y
+    ind <- approx(object$lambda, seq(object$lambda), lambda)$y
     l <- floor(ind)
     r <- ceiling(ind)
     w <- ind %% 1
-    beta <- (1-w)*object$beta[,l,drop=FALSE] + w*object$beta[,r,drop=FALSE]
+    beta <- (1-w)*object$beta[, l, drop=FALSE] + w*object$beta[, r, drop=FALSE]
     colnames(beta) <- lamNames(lambda)
   }
   else beta <- object$beta[, which, drop=FALSE]

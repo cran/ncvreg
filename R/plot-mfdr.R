@@ -1,9 +1,9 @@
 plot.mfdr <- function(x, type=c("mFDR", "EF"), log.l=FALSE, selected=TRUE, legend=TRUE, ...) {
-  if (class(x)[1]=="perm.ncvreg") {
+  if (inherits(x, "perm.ncvreg")) {
     l <- x$fit$lambda
     x <- data.frame(EF=x$EF, S=x$S, mFDR=x$mFDR)
   } else {
-    l <- as.numeric(rownames(x))
+    l <- as.double(rownames(x))
   }
   type <- match.arg(type)
   if (log.l) {
@@ -36,9 +36,9 @@ plot.mfdr <- function(x, type=c("mFDR", "EF"), log.l=FALSE, selected=TRUE, legen
     }
   }
 }
-transform.coord <- function(x,p) {
+transform.coord <- function(x, p) {
   ba <- (x[2]-x[1])/(p[2]-p[1])
   a <- x[1]-p[1]*ba
   b <- a + ba
-  c(a,b)
+  c(a, b)
 }

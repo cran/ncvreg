@@ -5,28 +5,28 @@ ncvreg <- function(X, y, family=c("gaussian","binomial","poisson"), penalty=c("M
   # Coersion
   family <- match.arg(family)
   penalty <- match.arg(penalty)
-  if (class(X) != "matrix") {
+  if (!inherits(X, "matrix")) {
     tmp <- try(X <- model.matrix(~0+., data=X), silent=TRUE)
-    if (class(tmp)[1] == "try-error") stop("X must be a matrix or able to be coerced to a matrix")
+    if (inherits(tmp, "try-error")) stop("X must be a matrix or able to be coerced to a matrix", call.=FALSE)
   }
-  if (storage.mode(X)=="integer") storage.mode(X) <- "double"
-  if (class(y) != "numeric") {
-    tmp <- try(y <- as.numeric(y), silent=TRUE)
-    if (class(tmp)[1] == "try-error") stop("y must numeric or able to be coerced to numeric")
+  if (typeof(X)=="integer") storage.mode(X) <- "double"
+  if (!is.double(y)) {
+    tmp <- try(y <- as.double(y), silent=TRUE)
+    if (inherits(tmp, "try-error")) stop("y must be numeric or able to be coerced to numeric", call.=FALSE)
   }
-  if (storage.mode(penalty.factor) != "double") storage.mode(penalty.factor) <- "double"
-
+  if (!is.double(penalty.factor)) penalty.factor <- as.double(penalty.factor)
+  
   # Error checking
-  if (gamma <= 1 & penalty=="MCP") stop("gamma must be greater than 1 for the MC penalty")
-  if (gamma <= 2 & penalty=="SCAD") stop("gamma must be greater than 2 for the SCAD penalty")
-  if (nlambda < 2) stop("nlambda must be at least 2")
-  if (alpha <= 0) stop("alpha must be greater than 0; choose a small positive number instead")
-  if (any(is.na(y)) | any(is.na(X))) stop("Missing data (NA's) detected.  Take actions (e.g., removing cases, removing features, imputation) to eliminate missing data before passing X and y to ncvreg")
-  if (length(penalty.factor)!=ncol(X)) stop("penalty.factor does not match up with X")
-  if (family=="binomial" & length(table(y)) > 2) stop("Attemping to use family='binomial' with non-binary data")
-  if (family=="binomial" & !identical(sort(unique(y)), 0:1)) y <- as.numeric(y==max(y))
-  if (length(y) != nrow(X)) stop("X and y do not have the same number of observations")
-
+  if (gamma <= 1 & penalty=="MCP") stop("gamma must be greater than 1 for the MC penalty", call.=FALSE)
+  if (gamma <= 2 & penalty=="SCAD") stop("gamma must be greater than 2 for the SCAD penalty", call.=FALSE)
+  if (nlambda < 2) stop("nlambda must be at least 2", call.=FALSE)
+  if (alpha <= 0) stop("alpha must be greater than 0; choose a small positive number instead", call.=FALSE)
+  if (any(is.na(y)) | any(is.na(X))) stop("Missing data (NA's) detected.  Take actions (e.g., removing cases, removing features, imputation) to eliminate missing data before passing X and y to ncvreg", call.=FALSE)
+  if (length(penalty.factor)!=ncol(X)) stop("penalty.factor does not match up with X", call.=FALSE)
+  if (family=="binomial" & length(table(y)) > 2) stop("Attemping to use family='binomial' with non-binary data", call.=FALSE)
+  if (family=="binomial" & !identical(sort(unique(y)), 0:1)) y <- as.double(y==max(y))
+  if (length(y) != nrow(X)) stop("X and y do not have the same number of observations", call.=FALSE)
+  
   ## Deprication support
   dots <- list(...)
   if ("n.lambda" %in% names(dots)) nlambda <- dots$n.lambda
@@ -50,12 +50,19 @@ ncvreg <- function(X, y, family=c("gaussian","binomial","poisson"), penalty=c("M
     nlambda <- length(lambda)
     user.lambda <- TRUE
   }
-  if (sys.nframe() > 1 && sys.call(-1)[[1]]=="local_mfdr") return(list(X=XX, y=yy))
+  
+  # Allow local_mfdr shortcut; probably not the ideal way to handle this
+  if (sys.nframe() > 1) {
+    cl <- sys.call(-1)[[1]]
+    if (is.name(cl)) {
+      if (cl == 'local_mfdr') return(list(X=XX, y=yy))
+    }
+  }
 
   ## Fit
   if (family=="gaussian") {
     res <- .Call("cdfit_gaussian", XX, yy, penalty, lambda, eps, as.integer(max.iter), as.double(gamma), penalty.factor, alpha, as.integer(dfmax), as.integer(user.lambda | any(penalty.factor==0)))
-    a <- rep(mean(y),nlambda)
+    a <- rep(mean(y), nlambda)
     b <- matrix(res[[1]], p, nlambda)
     loss <- res[[2]]
     iter <- res[[3]]
@@ -79,7 +86,7 @@ ncvreg <- function(X, y, family=c("gaussian","binomial","poisson"), penalty=c("M
   iter <- iter[ind]
   lambda <- lambda[ind]
   loss <- loss[ind]
-  if (family=="binomial") Eta <- Eta[,ind]
+  if (family=="binomial") Eta <- Eta[, ind]
   if (warn & sum(iter)==max.iter) warning("Maximum number of iterations reached")
 
   ## Local convexity?
@@ -92,7 +99,7 @@ ncvreg <- function(X, y, family=c("gaussian","binomial","poisson"), penalty=c("M
   beta[1,] <- a - crossprod(attr(XX, "center")[ns], bb)
 
   ## Names
-  varnames <- if (is.null(colnames(X))) paste("V",1:ncol(X),sep="") else colnames(X)
+  varnames <- if (is.null(colnames(X))) paste("V", 1:ncol(X), sep="") else colnames(X)
   varnames <- c("(Intercept)", varnames)
   dimnames(beta) <- list(varnames, lamNames(lambda))
 
