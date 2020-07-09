@@ -1,5 +1,4 @@
-set.seed(1)
-equal <- function(x, y) {all.equal(x, y, tol=0.001, check.attributes=FALSE)}
+library(survival, quietly=TRUE)
 
 # Works
 X <- matrix(rnorm(50*10), 50, 10)
@@ -7,7 +6,7 @@ y <- cbind(rexp(50, exp(X[,1])), sample(rep(0:1, c(10,40))))
 cvfit <- cv.ncvsurv(X, y, lambda.min=0)
 plot(cvfit)
 plot(cvfit, type='all')
-print(summary(cvfit))
+summary(cvfit)
 
 # Predict
 p <- predict(cvfit, X, 'link', lambda=0.1)
@@ -27,16 +26,15 @@ y <- cbind(rexp(25), sample(rep(0:1, c(5,20))))
 X <- matrix(rnorm(25*5), 25, 5)
 cvfit <- cv.ncvsurv(X, y, nfolds=25)
 plot(cvfit, type='all')
-print(summary(cvfit))
+summary(cvfit)
 
 # AUC
 cvfit <- cv.ncvsurv(X, y, returnY=TRUE)
 AUC(cvfit)
 
 ############################################
-.test = "cv.ncvsurv() agrees with glmnet" ##
+# cv.ncvsurv() agrees with glmnet
 ############################################
-require(survival)
 n <- 50
 p <- 100
 X <- matrix(rnorm(n*p), ncol=p)
@@ -69,7 +67,7 @@ plot(ncvfit1, ylim=ylim)
 plot(ncvfit2, ylim=ylim)
 
 ######################################
-.test = "cv.ncvsurv() options work" ##
+# cv.ncvsurv() options work
 ######################################
 n <- 50
 p <- 20
@@ -81,8 +79,8 @@ par(mfrow=c(2,2))
 cvfit <- cv.ncvsurv(X, y)
 plot(cvfit, type="all")
 par(mfrow=c(2,2))
-print(summary(cvfit))
-print(predict(cvfit, type="coefficients"))
-print(predict(cvfit, type="vars"))
-print(predict(cvfit, type="nvars"))
+summary(cvfit)
+predict(cvfit, type="coefficients")
+predict(cvfit, type="vars")
+predict(cvfit, type="nvars")
 
