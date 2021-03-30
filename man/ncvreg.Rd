@@ -76,12 +76,12 @@ warn=TRUE, returnX, ...)
   where the loss function L is the deviance (-2 times the log
   likelihood) for the specified outcome distribution
   (gaussian/binomial/poisson).
-  \href{http://pbreheny.github.io/ncvreg/articles/web/models.html}{See
+  \href{https://pbreheny.github.io/ncvreg/articles/web/models.html}{See
     here for more details}.
   
   This algorithm is stable, very efficient, and generally converges
   quite rapidly to the solution.  For GLMs,
-  \href{http://myweb.uiowa.edu/pbreheny/pdf/Breheny2011.pdf}{adaptive
+  \href{https://myweb.uiowa.edu/pbreheny/pdf/Breheny2011.pdf}{adaptive
     rescaling} is used.}
 \value{
   An object with S3 class \code{"ncvreg"} containing:
@@ -116,9 +116,13 @@ warn=TRUE, returnX, ...)
     \item{y}{The response, centered if \code{family='gaussian'}.}
   }
 }
-\references{Breheny, P. and Huang, J. (2011) Coordinate descent
-  algorithms for nonconvex penalized regression, with applications to
-  biological feature selection. Ann. Appl. Statist., 5: 232-253.}
+\references{
+  Breheny P and Huang J. (2011) Coordinate descentalgorithms
+  for nonconvex penalized regression, with applications to biological
+  feature selection.  \emph{Annals of Applied Statistics}, \strong{5}:
+  232-253.
+  \doi{10.1214/10-AOAS388}
+}
 \author{Patrick Breheny}
 \seealso{\code{\link{plot.ncvreg}}, \code{\link{cv.ncvreg}}}
 \examples{
