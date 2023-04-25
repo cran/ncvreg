@@ -4,9 +4,9 @@ suppressPackageStartupMessages(library(glmnet))
 
 # Works
 X <- matrix(rnorm(500), 50, 10)
-y <- rnorm(50)
+y <- X[,1] + rnorm(50)
 cvfit <- cv.ncvreg(X, y)
-summary(cvfit)
+print(summary(cvfit))
 
 # Predict
 b <- coef(cvfit)
@@ -35,9 +35,9 @@ cvfit <- cv.ncvreg(X, y, fold=1:25)
 
 # Works
 X <- matrix(rnorm(500), 50, 10)
-y <- rbinom(50, 1, 0.5)
+y <- rbinom(50, 1, binomial()$linkinv(X[,1]))
 cvfit <- cv.ncvreg(X, y, family='binomial')
-summary(cvfit)
+print(summary(cvfit))
 
 # Predict
 b <- coef(cvfit)

@@ -71,7 +71,7 @@
 #' coef(ncvreg(X, y), 0.1)
 #' # The unstandardized version makes little sense here, as it fails to account
 #' # for differences in the scales of the predictors.
-
+#' @export ncvfit
 ncvfit <- function(X, y, init=rep(0, ncol(X)), r, xtx, penalty=c("MCP", "SCAD", "lasso"),
                     gamma=switch(penalty, SCAD=3.7, 3), alpha=1, lambda, eps=1e-5,
                     max.iter=1000, penalty.factor=rep(1, ncol(X)), warn=TRUE) {
@@ -79,7 +79,7 @@ ncvfit <- function(X, y, init=rep(0, ncol(X)), r, xtx, penalty=c("MCP", "SCAD", 
   # family <- match.arg(family)
   penalty <- match.arg(penalty)
   if (!inherits(X, "matrix")) {
-    tmp <- try(X <- model.matrix(~0+., data=X), silent=TRUE)
+    tmp <- try(X <- stats::model.matrix(~0+., data=X), silent=TRUE)
     if (inherits(tmp, "try-error")) stop("X must be a matrix or able to be coerced to a matrix", call.=FALSE)
   }
   if (typeof(X)=="integer") storage.mode(X) <- "double"
@@ -138,7 +138,5 @@ ncvfit <- function(X, y, init=rep(0, ncol(X)), r, xtx, penalty=c("MCP", "SCAD", 
                         loss = loss,
                         penalty.factor = penalty.factor,
                         n = length(y)))
-  #if (family=="poisson") val$y <- y
-  #if (family=="binomial") val$Eta <- Eta
   val
 }

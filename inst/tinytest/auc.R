@@ -1,3 +1,4 @@
+if (interactive()) library(tinytest)
 library(survival, quietly=TRUE)
 
 # The quantities here are not exactly the same thing (one is in-sample, the
@@ -9,5 +10,5 @@ cvfit <- cv.ncvsurv(X, y, lambda.min=0, returnY=TRUE)
 a <- AUC(cvfit)
 a[length(a)]
 fit <- coxph(y~X)
-b <- survConcordance(y~predict(fit))$concordance
+b <- concordancefit(y, -predict(fit))$concordance
 expect_equivalent(a[length(a)], b, tol=0.02)
