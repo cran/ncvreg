@@ -1,10 +1,13 @@
 Package: ncvreg
 Title: Regularization Paths for SCAD and MCP Penalized Regression
         Models
-Version: 3.14.3
-Date: 2024-09-02
-Authors@R: person("Patrick", "Breheny", role=c("aut","cre"),
-  email="patrick-breheny@uiowa.edu", comment=c(ORCID="0000-0002-0650-1119"))
+Version: 3.15.0
+Date: 2025-02-11
+Authors@R: c(
+  person("Patrick", "Breheny", role=c("aut","cre"),
+    email="patrick-breheny@uiowa.edu", comment=c(ORCID="0000-0002-0650-1119")),
+  person("Ryan", "Miller", role='aut', comment=c(ORCID="0000-0003-0446-9992")),
+  person("Logan", "Harris", role='aut'))
 Suggests: ashr, knitr, parallel, rmarkdown, survival, tinytest
 VignetteBuilder: knitr
 Description: Fits regularization paths for linear regression, GLM, and Cox
@@ -23,8 +26,10 @@ LazyData: TRUE
 RoxygenNote: 7.3.2
 Encoding: UTF-8
 NeedsCompilation: yes
-Packaged: 2024-09-02 16:42:11 UTC; pbreheny
-Author: Patrick Breheny [aut, cre] (<https://orcid.org/0000-0002-0650-1119>)
+Packaged: 2025-02-11 22:42:58 UTC; pbreheny
+Author: Patrick Breheny [aut, cre] (<https://orcid.org/0000-0002-0650-1119>),
+  Ryan Miller [aut] (<https://orcid.org/0000-0003-0446-9992>),
+  Logan Harris [aut]
 Maintainer: Patrick Breheny <patrick-breheny@uiowa.edu>
 Repository: CRAN
-Date/Publication: 2024-09-02 19:00:02 UTC
+Date/Publication: 2025-02-11 23:10:02 UTC
