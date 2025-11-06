@@ -1,3 +1,10 @@
+# ncvreg 3.16.0
+  * New: intervals() to get intervals around estimates (also supports debiased
+    intervals)
+  * Remove: boot_ncvreg() function to obtain confidence intervals; use
+    intervals() instead
+  * Change: Now depends on R >= 4.1.0
+
 # ncvreg 3.15.0
   * New: boot_ncvreg() function to obtain confidence intervals
   * New: assign_fold() function to assign folds for CV
